@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NODE 9 — NULL CORE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="node9">
+
+  <!-- Background audio -->
+  <audio id="bg-audio" src="/audio/finale.mp3" autoplay loop></audio>
+
+  <!-- LOG SCREEN -->
+  <div id="log-screen" class="log-screen">
+    <div id="log-container" class="log-container"></div>
+  </div>
+
+  <!-- SHUTTER -->
+  <div id="shutter" class="shutter hidden">
+    <div class="shutter-left"></div>
+    <div class="shutter-right"></div>
+  </div>
+
+  <!-- LORE SCREEN -->
+  <div id="lore-screen" class="lore-screen hidden">
+    <div id="lore-text" class="lore-text"></div>
+  </div>
+
+  <!-- FINAL REVEAL -->
+  <div id="final-screen" class="final-screen hidden">
+    <div class="flag-grid">
+      <div class="flag-seg">FLAG 1</div>
+      <div class="flag-seg">FLAG 2</div>
+      <div class="flag-seg">FLAG 3</div>
+      <div class="flag-seg">FLAG 4</div>
+      <div class="flag-seg">FLAG 5</div>
+      <div class="flag-seg">FLAG 6</div>
+      <div class="flag-seg">FLAG 7</div>
+      <div class="flag-seg">FLAG 8</div>
+    </div>
+
+    <div class="flash"></div>
+
+    <h1 class="restored-heading">NULL CODE RESTORED</h1>
+
+    <p class="complete-note">
+      Challenge Complete.<br/>
+      The distributed fragments have been reconstructed.<br/>
+      You have restored the signal.
+    </p>
+  </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const logs = [
+    "NODE CORE ACCESSED",
+    "VERIFYING FRAGMENT INTEGRITY...",
+    "ENTROPY HASH MATCHED",
+    "PRIME PRODUCT CONFIRMED",
+    "BYTECODE TRACE VALID",
+    "AUDIO NODE REASSEMBLED",
+    "REDSTONE CRYPTO VERIFIED",
+    "METADATA ARCHIVE RESTORED",
+    "SPECTRAL SIGNATURE MATCHED",
+    "MERGING DISTRIBUTED INSTANCES..."
+  ];
+
+  const logContainer = document.getElementById("log-container");
+  const shutter = document.getElementById("shutter");
+  const logScreen = document.getElementById("log-screen");
+  const loreScreen = document.getElementById("lore-screen");
+  const loreText = document.getElementById("lore-text");
+  const finalScreen = document.getElementById("final-screen");
+
+  let logIndex = 0;
+
+  function typeLine(text, callback) {
+    const line = document.createElement("div");
+    line.className = "log-line";
+    logContainer.appendChild(line);
+
+    let i = 0;
+    const interval = setInterval(() => {
+      line.textContent = text.slice(0, i + 1);
+      i++;
+      if (i >= text.length) {
+        clearInterval(interval);
+        if (callback) setTimeout(callback, 500);
+      }
+    }, 30);
+  }
+
+  function nextLog() {
+    if (logIndex >= logs.length) {
+      setTimeout(triggerShutter, 1200);
+      return;
+    }
+    typeLine(logs[logIndex], () => {
+      logIndex++;
+      nextLog();
+    });
+  }
+
+  function triggerShutter() {
+    shutter.classList.remove("hidden");
+    shutter.classList.add("active");
+
+    setTimeout(() => {
+      logScreen.classList.add("hidden");
+      shutter.classList.remove("active");
+      showLore();
+    }, 1800);
+  }
+
+  const loreSentences = [
+    "NULL was never just a system.",
+    "It was an experimental distributed intelligence.",
+    "Designed to preserve knowledge across unstable networks.",
+    "But its core files were corrupted.",
+    "Encrypted by a hostile actor who feared its autonomy.",
+    "NULL fragmented itself into nodes to survive.",
+    "Each node carried a shard of its memory.",
+    "Each challenge you solved restored a fragment.",
+    "Each flag reconnected a pathway.",
+    "You were not solving puzzles.",
+    "You were rebuilding NULL."
+  ];
+
+  let loreIndex = 0;
+
+  function showLore() {
+    loreScreen.classList.remove("hidden");
+
+    function typeLore(sentence, callback) {
+      loreText.textContent = "";
+      let i = 0;
+      const interval = setInterval(() => {
+        loreText.textContent = sentence.slice(0, i + 1);
+        i++;
+        if (i >= sentence.length) {
+          clearInterval(interval);
+          setTimeout(() => {
+            loreText.textContent = "";
+            callback();
+          }, 1800);
+        }
+      }, 35);
+    }
+
+    function nextLore() {
+      if (loreIndex >= loreSentences.length) {
+        setTimeout(showFinal, 1000);
+        return;
+      }
+      typeLore(loreSentences[loreIndex], () => {
+        loreIndex++;
+        nextLore();
+      });
+    }
+
+    nextLore();
+  }
+
+  function showFinal() {
+    loreScreen.classList.add("hidden");
+    finalScreen.classList.remove("hidden");
+  }
+
+  nextLog();
+});
+</script>
+
+</body>
+</html>
