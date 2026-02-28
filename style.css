@@ -1,0 +1,123 @@
+/* ===== NODE 9 ===== */
+
+body.node9 {
+  margin: 0;
+  background: #000;
+  color: #00ff99;
+  font-family: "JetBrains Mono", monospace;
+  overflow: hidden;
+}
+
+/* LOG SCREEN */
+
+.log-screen {
+  padding: 40px;
+}
+
+.log-line {
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+
+/* SHUTTER */
+
+.shutter {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  z-index: 10;
+}
+
+.shutter-left,
+.shutter-right {
+  width: 50%;
+  background: #000;
+  transition: transform 0.8s ease;
+}
+
+.shutter-left {
+  transform: translateX(-100%);
+}
+
+.shutter-right {
+  transform: translateX(100%);
+}
+
+.shutter.active .shutter-left {
+  transform: translateX(0);
+}
+
+.shutter.active .shutter-right {
+  transform: translateX(0);
+}
+
+/* LORE */
+
+.lore-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.lore-text {
+  font-size: 1.2rem;
+  text-align: center;
+  max-width: 800px;
+}
+
+/* FINAL */
+
+.final-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+}
+
+.flag-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 120px);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.flag-seg {
+  padding: 12px;
+  border: 1px solid #00ff99;
+  background: rgba(0,255,153,0.1);
+  font-size: 0.8rem;
+}
+
+.flash {
+  position: absolute;
+  inset: 0;
+  background: white;
+  opacity: 0;
+  animation: flashAnim 0.6s ease forwards;
+  animation-delay: 0.5s;
+}
+
+@keyframes flashAnim {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.restored-heading {
+  font-size: 2.5rem;
+  margin-top: 40px;
+  color: #00ff99;
+  letter-spacing: 0.2em;
+}
+
+.complete-note {
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+.hidden {
+  display: none;
+}
