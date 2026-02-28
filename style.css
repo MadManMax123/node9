@@ -121,3 +121,24 @@ body.node9 {
 .hidden {
   display: none;
 }
+
+
+/* Post-credit line */
+
+.post-credit {
+  margin-top: 24px;
+  font-size: 0.8rem;
+  color: #4b5563;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+.post-credit-visible {
+  opacity: 1;
+}
+
+/* utility */
+
+.hidden {
+  display: none;
+}
