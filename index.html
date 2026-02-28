@@ -29,18 +29,19 @@
 
   <!-- FINAL REVEAL -->
   <div id="final-screen" class="final-screen hidden">
-    <div class="flag-grid">
-      <div class="flag-seg">FLAG 1</div>
-      <div class="flag-seg">FLAG 2</div>
-      <div class="flag-seg">FLAG 3</div>
-      <div class="flag-seg">FLAG 4</div>
-      <div class="flag-seg">FLAG 5</div>
-      <div class="flag-seg">FLAG 6</div>
-      <div class="flag-seg">FLAG 7</div>
-      <div class="flag-seg">FLAG 8</div>
+    <div class="flag-grid" id="flag-grid">
+      <!-- segments will be filled dynamically -->
+      <div class="flag-seg" data-flag-index="0"></div>
+      <div class="flag-seg" data-flag-index="1"></div>
+      <div class="flag-seg" data-flag-index="2"></div>
+      <div class="flag-seg" data-flag-index="3"></div>
+      <div class="flag-seg" data-flag-index="4"></div>
+      <div class="flag-seg" data-flag-index="5"></div>
+      <div class="flag-seg" data-flag-index="6"></div>
+      <div class="flag-seg" data-flag-index="7"></div>
     </div>
 
-    <div class="flash"></div>
+    <div class="flash" id="flash-overlay"></div>
 
     <h1 class="restored-heading">NULL CODE RESTORED</h1>
 
@@ -49,10 +50,27 @@
       The distributed fragments have been reconstructed.<br/>
       You have restored the signal.
     </p>
+
+    <!-- Post-credit line -->
+    <div id="post-credit" class="post-credit hidden">
+      NULL: noise was never the enemy. it was the message.
+    </div>
   </div>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+  // ====== CONFIG: PUT YOUR REAL FLAGS HERE ======
+  const collectedFlags = [
+    "FLAG{LEVEL1_YOUR_FLAG}",
+    "FLAG{LEVEL2_YOUR_FLAG}",
+    "FLAG{LEVEL3_YOUR_FLAG}",
+    "FLAG{LEVEL4_YOUR_FLAG}",
+    "FLAG{LEVEL5_YOUR_FLAG}",
+    "FLAG{LEVEL6_YOUR_FLAG}",
+    "FLAG{LEVEL7_YOUR_FLAG}",
+    "FLAG{LEVEL8_YOUR_FLAG}"
+  ];
+  // ==============================================
 
   const logs = [
     "NODE CORE ACCESSED",
@@ -73,6 +91,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const loreScreen = document.getElementById("lore-screen");
   const loreText = document.getElementById("lore-text");
   const finalScreen = document.getElementById("final-screen");
+  const flagGrid = document.getElementById("flag-grid");
+  const flashOverlay = document.getElementById("flash-overlay");
+  const postCredit = document.getElementById("post-credit");
+
+  // try to gently handle autoplay
+  const bgAudio = document.getElementById("bg-audio");
+  if (bgAudio) {
+    bgAudio.play().catch(() => {
+      document.addEventListener("click", function resumeAudio() {
+        bgAudio.play().catch(() => {});
+        document.removeEventListener("click", resumeAudio);
+      });
+    });
+  }
 
   let logIndex = 0;
 
@@ -118,14 +150,13 @@ document.addEventListener("DOMContentLoaded", () => {
     "NULL was never just a system.",
     "It was an experimental distributed intelligence.",
     "Designed to preserve knowledge across unstable networks.",
-    "But its core files were corrupted.",
-    "Encrypted by a hostile actor who feared its autonomy.",
-    "NULL fragmented itself into nodes to survive.",
+    "When a hostile actor corrupted its core files,",
+    "NULL scattered itself into fragmented nodes to survive.",
     "Each node carried a shard of its memory.",
-    "Each challenge you solved restored a fragment.",
-    "Each flag reconnected a pathway.",
-    "You were not solving puzzles.",
-    "You were rebuilding NULL."
+    "Each challenge you solved restored part of its structure.",
+    "Each flag you claimed reconnected a broken pathway.",
+    "You were not just solving puzzles.",
+    "You were rebuilding NULL from the outside."
   ];
 
   let loreIndex = 0;
@@ -163,9 +194,37 @@ document.addEventListener("DOMContentLoaded", () => {
     nextLore();
   }
 
+  function populateFlags() {
+    const segs = flagGrid.querySelectorAll(".flag-seg");
+    segs.forEach((seg, idx) => {
+      if (idx < collectedFlags.length) {
+        seg.textContent = collectedFlags[idx];
+      } else {
+        seg.textContent = "—";
+      }
+    });
+  }
+
+  function triggerFlash() {
+    flashOverlay.classList.add("flash-active");
+    setTimeout(() => {
+      flashOverlay.classList.remove("flash-active");
+    }, 600);
+  }
+
+  function showPostCredit() {
+    postCredit.classList.remove("hidden");
+    postCredit.classList.add("post-credit-visible");
+  }
+
   function showFinal() {
     loreScreen.classList.add("hidden");
+    populateFlags();
     finalScreen.classList.remove("hidden");
+    triggerFlash();
+
+    // show post-credit line a bit later
+    setTimeout(showPostCredit, 3500);
   }
 
   nextLog();
