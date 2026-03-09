@@ -72,18 +72,133 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
   // ==============================================
 
-  const logs = [
-    "NODE CORE ACCESSED",
-    "VERIFYING FRAGMENT INTEGRITY...",
-    "ENTROPY HASH MATCHED",
-    "PRIME PRODUCT CONFIRMED",
-    "BYTECODE TRACE VALID",
-    "AUDIO NODE REASSEMBLED",
-    "REDSTONE CRYPTO VERIFIED",
-    "METADATA ARCHIVE RESTORED",
-    "SPECTRAL SIGNATURE MATCHED",
-    "MERGING DISTRIBUTED INSTANCES..."
+const logs = [
+  "NODE CORE ACCESSED",
+  "VERIFYING FRAGMENT INTEGRITY...",
+  "ENTROPY HASH MATCHED",
+  "PRIME PRODUCT CONFIRMED",
+  "BYTECODE TRACE VALID",
+  "AUDIO NODE REASSEMBLED",
+  "REDSTONE CRYPTO VERIFIED",
+  "METADATA ARCHIVE RESTORED",
+  "SPECTRAL SIGNATURE MATCHED",
+  "MERGING DISTRIBUTED INSTANCES..."
+];
+
+function timestamp() {
+  const d = new Date();
+  return `[${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}:${d.getSeconds().toString().padStart(2,"0")}]`;
+}
+
+function randomModule() {
+  const modules = [
+    "core",
+    "entropy",
+    "bytecode",
+    "crypto",
+    "spectral",
+    "audio",
+    "archive",
+    "node",
+    "bridge",
+    "recovery"
   ];
+  return modules[Math.floor(Math.random()*modules.length)];
+}
+
+function randomHex() {
+  return "0x" + Math.floor(Math.random()*0xffffff).toString(16);
+}
+
+function createProgressBar() {
+  const total = 24;
+  let filled = 0;
+
+  const line = document.createElement("div");
+  line.className = "log-line";
+  logContainer.appendChild(line);
+
+  const interval = setInterval(() => {
+    filled++;
+
+    const bar =
+      "[" +
+      "#".repeat(filled) +
+      "-".repeat(total - filled) +
+      "]";
+
+    const percent = Math.floor((filled/total)*100);
+
+    line.textContent = `${timestamp()} [scan] ${bar} ${percent}%`;
+
+    if (filled >= total) {
+      clearInterval(interval);
+    }
+  }, 35 + Math.random()*60);
+}
+
+function typeLine(text, callback) {
+
+  const prefix =
+    `${timestamp()} [${randomModule()}] ${randomHex()} :: `;
+
+  const line = document.createElement("div");
+  line.className = "log-line";
+  logContainer.appendChild(line);
+
+  let i = 0;
+
+  const interval = setInterval(() => {
+    line.textContent = prefix + text.slice(0, i+1);
+    i++;
+
+    if (i >= text.length) {
+      clearInterval(interval);
+
+      if (Math.random() > 0.6) {
+        setTimeout(createProgressBar, 150);
+      }
+
+      if (callback) {
+        setTimeout(callback, 300 + Math.random()*600);
+      }
+    }
+  }, 15 + Math.random()*40);
+}
+
+function bootNoise() {
+
+  const junk = [
+    "allocating node buffers...",
+    "syncing distributed state...",
+    "relinking archive sectors...",
+    "verifying spectral map...",
+    "entropy recalibration..."
+  ];
+
+  const line = document.createElement("div");
+  line.className = "log-line";
+
+  line.textContent =
+    `${timestamp()} [sys] ${junk[Math.floor(Math.random()*junk.length)]}`;
+
+  logContainer.appendChild(line);
+}
+
+function nextLog() {
+
+  if (logIndex >= logs.length) {
+    setTimeout(triggerShutter, 1200);
+    return;
+  }
+
+  if (Math.random() > 0.5) bootNoise();
+
+  typeLine(logs[logIndex], () => {
+    logIndex++;
+    nextLog();
+  });
+}
 
   const logContainer = document.getElementById("log-container");
   const shutter = document.getElementById("shutter");
