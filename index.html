@@ -57,6 +57,10 @@
     <div id="post-credit" class="post-credit hidden">
       NULL: noise was never the enemy. it was the message.
     </div>
+
+    <div id="post-footnote" class="post-footnote hidden">
+      did u miss something?
+    </div>
   </div>
 
 <script>
@@ -72,6 +76,8 @@ document.addEventListener("DOMContentLoaded", () => {
     "FLAG{LEVEL8_YOUR_FLAG}"
   ];
 
+  const level9Flag = "FLAG{LEVEL9_YOUR_FLAG}";
+
   const logs = [
     "NODE CORE ACCESSED",
     "VERIFYING FRAGMENT INTEGRITY...",
@@ -85,6 +91,47 @@ document.addEventListener("DOMContentLoaded", () => {
     "MERGING DISTRIBUTED INSTANCES..."
   ];
 
+  const preNoise = [
+    "allocating node buffers...",
+    "syncing distributed state...",
+    "relinking archive sectors...",
+    "verifying spectral map...",
+    "entropy recalibration...",
+    "mounting null partitions...",
+    "checking stale mirrors...",
+    "repairing shard index...",
+    "link handshake unstable...",
+    "tracing orphan bytecode...",
+    "restoring parity blocks...",
+    "replaying crash journal...",
+    "rebuilding damaged lookup tables...",
+    "walking fragmented memory graph...",
+    "decompressing cold archive segment...",
+    "revalidating distributed namespace...",
+    "repair candidate accepted...",
+    "reconstructing entropy lattice...",
+    "merging silent fallback replicas...",
+    "discarding poisoned state branch..."
+  ];
+
+  const followupNoise = [
+    "shard table stabilized",
+    "archive path recovered",
+    "entropy gradient nominal",
+    "checksum variance within tolerance",
+    "distributed mirror online",
+    "spectral drift resolved",
+    "orphaned instance attached",
+    "stale branch pruned",
+    "signal fidelity rising",
+    "node cluster synchronized",
+    "fragment quorum reached",
+    "cold storage unlocked",
+    "repair sequence continuing",
+    "fallback route established",
+    "decryption lattice aligned"
+  ];
+
   const logContainer = document.getElementById("log-container");
   const shutter = document.getElementById("shutter");
   const logScreen = document.getElementById("log-screen");
@@ -94,6 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const flagGrid = document.getElementById("flag-grid");
   const flashOverlay = document.getElementById("flash-overlay");
   const postCredit = document.getElementById("post-credit");
+  const postFootnote = document.getElementById("post-footnote");
   const bgAudio = document.getElementById("bg-audio");
 
   if (bgAudio) {
@@ -115,7 +163,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function randomModule() {
     const modules = [
       "core", "entropy", "bytecode", "crypto", "spectral",
-      "audio", "archive", "node", "bridge", "recovery", "sys"
+      "audio", "archive", "node", "bridge", "recovery", "sys",
+      "mirror", "quorum", "fs", "trace"
     ];
     return modules[Math.floor(Math.random() * modules.length)];
   }
@@ -128,46 +177,51 @@ document.addEventListener("DOMContentLoaded", () => {
     logContainer.scrollTop = logContainer.scrollHeight;
   }
 
-  function createLogLine(text = "") {
+  function createLogLine(text = "", className = "") {
     const line = document.createElement("div");
-    line.className = "log-line";
+    line.className = "log-line" + (className ? ` ${className}` : "");
     line.textContent = text;
     logContainer.appendChild(line);
     scrollLogsToBottom();
     return line;
   }
 
-  function createSystemNoise() {
-    const junk = [
-      "allocating node buffers...",
-      "syncing distributed state...",
-      "relinking archive sectors...",
-      "verifying spectral map...",
-      "entropy recalibration...",
-      "mounting null partitions...",
-      "checking stale mirrors...",
-      "repairing shard index...",
-      "link handshake unstable...",
-      "tracing orphan bytecode..."
-    ];
+  function createNoiseLine() {
+    const text = `${timestamp()} [${randomModule()}] ${randomHex()} :: ${preNoise[Math.floor(Math.random() * preNoise.length)]}`;
+    const cls = Math.random() > 0.7 ? "dim-line" : "";
+    createLogLine(text, cls);
+  }
 
-    const line = createLogLine(
-      `${timestamp()} [${randomModule()}] ${randomHex()} :: ${junk[Math.floor(Math.random() * junk.length)]}`
-    );
-
-    if (Math.random() > 0.75) {
-      line.classList.add("dim-line");
-    }
+  function createStatusLine() {
+    const text = `${timestamp()} [status] ${randomHex()} :: ${followupNoise[Math.floor(Math.random() * followupNoise.length)]}`;
+    const cls = Math.random() > 0.55 ? "status-line" : "dim-line";
+    createLogLine(text, cls);
   }
 
   function createDivider() {
-    const line = createLogLine("----------------------------------------------------------------");
-    line.classList.add("divider-line");
+    createLogLine("----------------------------------------------------------------", "divider-line");
+  }
+
+  function createChecksumLine() {
+    const current = Math.floor(Math.random() * 9000 + 1000);
+    const total = Math.floor(Math.random() * 3000 + 9000);
+    createLogLine(
+      `${timestamp()} [hash] ${randomHex()} :: block checksum ${current}/${total} accepted`,
+      "dim-line"
+    );
+  }
+
+  function createRetryLine() {
+    const attempts = Math.floor(Math.random() * 3) + 1;
+    createLogLine(
+      `${timestamp()} [repair] ${randomHex()} :: transient fault encountered, retry ${attempts}/3`,
+      "warn-line"
+    );
   }
 
   function createProgressBar(label = "scan") {
     return new Promise((resolve) => {
-      const total = 28;
+      const total = 30;
       let filled = 0;
       const line = createLogLine();
 
@@ -179,7 +233,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const percent = Math.floor((filled / total) * 100);
 
         line.textContent = `${timestamp()} [${label}] ${bar} ${String(percent).padStart(3, " ")}%`;
-
         scrollLogsToBottom();
 
         if (filled >= total) {
@@ -235,19 +288,49 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function createHiddenFlagLine() {
+    const subtleLine = document.createElement("div");
+    subtleLine.className = "log-line subtle-flag-line";
+    subtleLine.textContent = `${timestamp()} [mirror] ${randomHex()} :: residual echo persisted -> ${level9Flag}`;
+    logContainer.appendChild(subtleLine);
+    scrollLogsToBottom();
+  }
+
   async function nextLog() {
     if (logIndex >= logs.length) {
-      setTimeout(triggerShutter, 1200);
+      if (Math.random() > 0.25) createNoiseLine();
+      if (Math.random() > 0.4) createStatusLine();
+      if (Math.random() > 0.35) createChecksumLine();
+
+      createHiddenFlagLine();
+
+      if (Math.random() > 0.3) createStatusLine();
+      if (Math.random() > 0.45) createDivider();
+
+      setTimeout(triggerShutter, 1800);
       return;
     }
 
-    if (Math.random() > 0.45) createSystemNoise();
-    if (Math.random() > 0.82) createDivider();
+    const noiseCount = Math.floor(Math.random() * 3) + 1;
+    for (let i = 0; i < noiseCount; i++) {
+      createNoiseLine();
+      if (Math.random() > 0.55) createStatusLine();
+      if (Math.random() > 0.72) createChecksumLine();
+      if (Math.random() > 0.88) createRetryLine();
+      if (Math.random() > 0.85) createDivider();
+    }
 
     await typeLine(logs[logIndex]);
 
-    if (Math.random() > 0.38) {
-      await createProgressBar(["scan", "merge", "verify", "restore"][Math.floor(Math.random() * 4)]);
+    const extraAfterMain = Math.floor(Math.random() * 3) + 1;
+    for (let i = 0; i < extraAfterMain; i++) {
+      if (Math.random() > 0.25) createStatusLine();
+      if (Math.random() > 0.6) createChecksumLine();
+      if (Math.random() > 0.82) createNoiseLine();
+    }
+
+    if (Math.random() > 0.2) {
+      await createProgressBar(["scan", "merge", "verify", "restore", "relink"][Math.floor(Math.random() * 5)]);
     }
 
     logIndex++;
@@ -338,6 +421,13 @@ document.addEventListener("DOMContentLoaded", () => {
     requestAnimationFrame(() => {
       postCredit.classList.add("post-credit-visible");
     });
+
+    setTimeout(() => {
+      postFootnote.classList.remove("hidden");
+      requestAnimationFrame(() => {
+        postFootnote.classList.add("post-footnote-visible");
+      });
+    }, 1200);
   }
 
   function showFinal() {
