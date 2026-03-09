@@ -13,6 +13,7 @@
 
   <!-- LOG SCREEN -->
   <div id="log-screen" class="log-screen">
+    <div class="crt-overlay"></div>
     <div id="log-container" class="log-container"></div>
   </div>
 
@@ -24,13 +25,15 @@
 
   <!-- LORE SCREEN -->
   <div id="lore-screen" class="lore-screen hidden">
+    <div class="crt-overlay"></div>
     <div id="lore-text" class="lore-text"></div>
   </div>
 
   <!-- FINAL REVEAL -->
   <div id="final-screen" class="final-screen hidden">
+    <div class="crt-overlay"></div>
+
     <div class="flag-grid" id="flag-grid">
-      <!-- segments will be filled dynamically -->
       <div class="flag-seg" data-flag-index="0"></div>
       <div class="flag-seg" data-flag-index="1"></div>
       <div class="flag-seg" data-flag-index="2"></div>
@@ -51,7 +54,6 @@
       You have restored the signal.
     </p>
 
-    <!-- Post-credit line -->
     <div id="post-credit" class="post-credit hidden">
       NULL: noise was never the enemy. it was the message.
     </div>
@@ -59,7 +61,6 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  // ====== CONFIG: PUT YOUR REAL FLAGS HERE ======
   const collectedFlags = [
     "FLAG{LEVEL1_YOUR_FLAG}",
     "FLAG{LEVEL2_YOUR_FLAG}",
@@ -70,135 +71,19 @@ document.addEventListener("DOMContentLoaded", () => {
     "FLAG{LEVEL7_YOUR_FLAG}",
     "FLAG{LEVEL8_YOUR_FLAG}"
   ];
-  // ==============================================
 
-const logs = [
-  "NODE CORE ACCESSED",
-  "VERIFYING FRAGMENT INTEGRITY...",
-  "ENTROPY HASH MATCHED",
-  "PRIME PRODUCT CONFIRMED",
-  "BYTECODE TRACE VALID",
-  "AUDIO NODE REASSEMBLED",
-  "REDSTONE CRYPTO VERIFIED",
-  "METADATA ARCHIVE RESTORED",
-  "SPECTRAL SIGNATURE MATCHED",
-  "MERGING DISTRIBUTED INSTANCES..."
-];
-
-function timestamp() {
-  const d = new Date();
-  return `[${d.getHours().toString().padStart(2,"0")}:${d.getMinutes().toString().padStart(2,"0")}:${d.getSeconds().toString().padStart(2,"0")}]`;
-}
-
-function randomModule() {
-  const modules = [
-    "core",
-    "entropy",
-    "bytecode",
-    "crypto",
-    "spectral",
-    "audio",
-    "archive",
-    "node",
-    "bridge",
-    "recovery"
+  const logs = [
+    "NODE CORE ACCESSED",
+    "VERIFYING FRAGMENT INTEGRITY...",
+    "ENTROPY HASH MATCHED",
+    "PRIME PRODUCT CONFIRMED",
+    "BYTECODE TRACE VALID",
+    "AUDIO NODE REASSEMBLED",
+    "REDSTONE CRYPTO VERIFIED",
+    "METADATA ARCHIVE RESTORED",
+    "SPECTRAL SIGNATURE MATCHED",
+    "MERGING DISTRIBUTED INSTANCES..."
   ];
-  return modules[Math.floor(Math.random()*modules.length)];
-}
-
-function randomHex() {
-  return "0x" + Math.floor(Math.random()*0xffffff).toString(16);
-}
-
-function createProgressBar() {
-  const total = 24;
-  let filled = 0;
-
-  const line = document.createElement("div");
-  line.className = "log-line";
-  logContainer.appendChild(line);
-
-  const interval = setInterval(() => {
-    filled++;
-
-    const bar =
-      "[" +
-      "#".repeat(filled) +
-      "-".repeat(total - filled) +
-      "]";
-
-    const percent = Math.floor((filled/total)*100);
-
-    line.textContent = `${timestamp()} [scan] ${bar} ${percent}%`;
-
-    if (filled >= total) {
-      clearInterval(interval);
-    }
-  }, 35 + Math.random()*60);
-}
-
-function typeLine(text, callback) {
-
-  const prefix =
-    `${timestamp()} [${randomModule()}] ${randomHex()} :: `;
-
-  const line = document.createElement("div");
-  line.className = "log-line";
-  logContainer.appendChild(line);
-
-  let i = 0;
-
-  const interval = setInterval(() => {
-    line.textContent = prefix + text.slice(0, i+1);
-    i++;
-
-    if (i >= text.length) {
-      clearInterval(interval);
-
-      if (Math.random() > 0.6) {
-        setTimeout(createProgressBar, 150);
-      }
-
-      if (callback) {
-        setTimeout(callback, 300 + Math.random()*600);
-      }
-    }
-  }, 15 + Math.random()*40);
-}
-
-function bootNoise() {
-
-  const junk = [
-    "allocating node buffers...",
-    "syncing distributed state...",
-    "relinking archive sectors...",
-    "verifying spectral map...",
-    "entropy recalibration..."
-  ];
-
-  const line = document.createElement("div");
-  line.className = "log-line";
-
-  line.textContent =
-    `${timestamp()} [sys] ${junk[Math.floor(Math.random()*junk.length)]}`;
-
-  logContainer.appendChild(line);
-}
-
-function nextLog() {
-
-  if (logIndex >= logs.length) {
-    setTimeout(triggerShutter, 1200);
-    return;
-  }
-
-  if (Math.random() > 0.5) bootNoise();
-
-  typeLine(logs[logIndex], () => {
-    logIndex++;
-    nextLog();
-  });
-}
 
   const logContainer = document.getElementById("log-container");
   const shutter = document.getElementById("shutter");
@@ -209,9 +94,8 @@ function nextLog() {
   const flagGrid = document.getElementById("flag-grid");
   const flashOverlay = document.getElementById("flash-overlay");
   const postCredit = document.getElementById("post-credit");
-
-  // try to gently handle autoplay
   const bgAudio = document.getElementById("bg-audio");
+
   if (bgAudio) {
     bgAudio.play().catch(() => {
       document.addEventListener("click", function resumeAudio() {
@@ -223,31 +107,151 @@ function nextLog() {
 
   let logIndex = 0;
 
-  function typeLine(text, callback) {
-    const line = document.createElement("div");
-    line.className = "log-line";
-    logContainer.appendChild(line);
-
-    let i = 0;
-    const interval = setInterval(() => {
-      line.textContent = text.slice(0, i + 1);
-      i++;
-      if (i >= text.length) {
-        clearInterval(interval);
-        if (callback) setTimeout(callback, 500);
-      }
-    }, 30);
+  function timestamp() {
+    const d = new Date();
+    return `[${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}]`;
   }
 
-  function nextLog() {
+  function randomModule() {
+    const modules = [
+      "core", "entropy", "bytecode", "crypto", "spectral",
+      "audio", "archive", "node", "bridge", "recovery", "sys"
+    ];
+    return modules[Math.floor(Math.random() * modules.length)];
+  }
+
+  function randomHex() {
+    return "0x" + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, "0");
+  }
+
+  function scrollLogsToBottom() {
+    logContainer.scrollTop = logContainer.scrollHeight;
+  }
+
+  function createLogLine(text = "") {
+    const line = document.createElement("div");
+    line.className = "log-line";
+    line.textContent = text;
+    logContainer.appendChild(line);
+    scrollLogsToBottom();
+    return line;
+  }
+
+  function createSystemNoise() {
+    const junk = [
+      "allocating node buffers...",
+      "syncing distributed state...",
+      "relinking archive sectors...",
+      "verifying spectral map...",
+      "entropy recalibration...",
+      "mounting null partitions...",
+      "checking stale mirrors...",
+      "repairing shard index...",
+      "link handshake unstable...",
+      "tracing orphan bytecode..."
+    ];
+
+    const line = createLogLine(
+      `${timestamp()} [${randomModule()}] ${randomHex()} :: ${junk[Math.floor(Math.random() * junk.length)]}`
+    );
+
+    if (Math.random() > 0.75) {
+      line.classList.add("dim-line");
+    }
+  }
+
+  function createDivider() {
+    const line = createLogLine("----------------------------------------------------------------");
+    line.classList.add("divider-line");
+  }
+
+  function createProgressBar(label = "scan") {
+    return new Promise((resolve) => {
+      const total = 28;
+      let filled = 0;
+      const line = createLogLine();
+
+      const interval = setInterval(() => {
+        filled += Math.floor(Math.random() * 3) + 1;
+        if (filled > total) filled = total;
+
+        const bar = "[" + "█".repeat(filled) + " ".repeat(total - filled) + "]";
+        const percent = Math.floor((filled / total) * 100);
+
+        line.textContent = `${timestamp()} [${label}] ${bar} ${String(percent).padStart(3, " ")}%`;
+
+        scrollLogsToBottom();
+
+        if (filled >= total) {
+          clearInterval(interval);
+          setTimeout(resolve, 120 + Math.random() * 220);
+        }
+      }, 35 + Math.random() * 55);
+    });
+  }
+
+  function corruptChar(char) {
+    const pool = "!@#$%^&*()_+-=[]{};:<>?/\\|~";
+    if (char === " ") return " ";
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function typeLine(text) {
+    return new Promise((resolve) => {
+      const prefix = `${timestamp()} [${randomModule()}] ${randomHex()} :: `;
+      const line = createLogLine(prefix);
+      let i = 0;
+
+      const interval = setInterval(() => {
+        const revealed = text.slice(0, i);
+        const next = text[i] || "";
+        const useCorruption = Math.random() > 0.72 && next && next !== " ";
+        const shownChar = useCorruption ? corruptChar(next) : next;
+
+        line.textContent = prefix + revealed + shownChar;
+        scrollLogsToBottom();
+
+        if (useCorruption) {
+          setTimeout(() => {
+            line.textContent = prefix + text.slice(0, i + 1);
+            scrollLogsToBottom();
+          }, 22 + Math.random() * 45);
+        }
+
+        i++;
+
+        if (i >= text.length) {
+          clearInterval(interval);
+          line.textContent = prefix + text;
+          scrollLogsToBottom();
+
+          if (Math.random() > 0.6) {
+            line.classList.add("success-line");
+          }
+
+          setTimeout(resolve, 260 + Math.random() * 500);
+        }
+      }, 16 + Math.random() * 34);
+    });
+  }
+
+  async function nextLog() {
     if (logIndex >= logs.length) {
       setTimeout(triggerShutter, 1200);
       return;
     }
-    typeLine(logs[logIndex], () => {
-      logIndex++;
-      nextLog();
-    });
+
+    if (Math.random() > 0.45) createSystemNoise();
+    if (Math.random() > 0.82) createDivider();
+
+    await typeLine(logs[logIndex]);
+
+    if (Math.random() > 0.38) {
+      await createProgressBar(["scan", "merge", "verify", "restore"][Math.floor(Math.random() * 4)]);
+    }
+
+    logIndex++;
+    nextLog();
   }
 
   function triggerShutter() {
@@ -276,60 +280,64 @@ function nextLog() {
 
   let loreIndex = 0;
 
-  function showLore() {
-    loreScreen.classList.remove("hidden");
-
-    function typeLore(sentence, callback) {
+  function typeLore(sentence) {
+    return new Promise((resolve) => {
       loreText.textContent = "";
       let i = 0;
+
       const interval = setInterval(() => {
-        loreText.textContent = sentence.slice(0, i + 1);
+        const revealed = sentence.slice(0, i);
+        const next = sentence[i] || "";
+        const useCorruption = Math.random() > 0.84 && next && next !== " ";
+        loreText.textContent = revealed + (useCorruption ? corruptChar(next) : next);
         i++;
+
         if (i >= sentence.length) {
           clearInterval(interval);
+          loreText.textContent = sentence;
+
           setTimeout(() => {
-            loreText.textContent = "";
-            callback();
+            loreText.classList.add("lore-fade");
+            setTimeout(() => {
+              loreText.textContent = "";
+              loreText.classList.remove("lore-fade");
+              resolve();
+            }, 500);
           }, 1800);
         }
-      }, 35);
+      }, 28 + Math.random() * 22);
+    });
+  }
+
+  async function showLore() {
+    loreScreen.classList.remove("hidden");
+
+    while (loreIndex < loreSentences.length) {
+      await typeLore(loreSentences[loreIndex]);
+      loreIndex++;
     }
 
-    function nextLore() {
-      if (loreIndex >= loreSentences.length) {
-        setTimeout(showFinal, 1000);
-        return;
-      }
-      typeLore(loreSentences[loreIndex], () => {
-        loreIndex++;
-        nextLore();
-      });
-    }
-
-    nextLore();
+    setTimeout(showFinal, 900);
   }
 
   function populateFlags() {
     const segs = flagGrid.querySelectorAll(".flag-seg");
     segs.forEach((seg, idx) => {
-      if (idx < collectedFlags.length) {
-        seg.textContent = collectedFlags[idx];
-      } else {
-        seg.textContent = "—";
-      }
+      seg.textContent = idx < collectedFlags.length ? collectedFlags[idx] : "—";
     });
   }
 
   function triggerFlash() {
+    flashOverlay.classList.remove("flash-active");
+    void flashOverlay.offsetWidth;
     flashOverlay.classList.add("flash-active");
-    setTimeout(() => {
-      flashOverlay.classList.remove("flash-active");
-    }, 600);
   }
 
   function showPostCredit() {
     postCredit.classList.remove("hidden");
-    postCredit.classList.add("post-credit-visible");
+    requestAnimationFrame(() => {
+      postCredit.classList.add("post-credit-visible");
+    });
   }
 
   function showFinal() {
@@ -337,8 +345,6 @@ function nextLog() {
     populateFlags();
     finalScreen.classList.remove("hidden");
     triggerFlash();
-
-    // show post-credit line a bit later
     setTimeout(showPostCredit, 3500);
   }
 
