@@ -97,19 +97,25 @@ body.node9 {
   color: rgba(150, 255, 210, 0.82);
 }
 
+.warn-line {
+  color: #ffcc66;
+  text-shadow: 0 0 6px rgba(255, 204, 102, 0.16);
+}
+
+.error-line {
+  color: #ff5a5a;
+  text-shadow: 0 0 8px rgba(255, 60, 60, 0.26);
+}
+
 .divider-line {
   color: rgba(0, 255, 153, 0.32);
 }
 
-.warn-line {
-  color: rgba(255, 210, 120, 0.75);
-}
-
 .success-line {
+  color: #00ff99;
   text-shadow: 0 0 8px rgba(0, 255, 153, 0.35);
 }
 
-/* the subtle flag line is intentionally easy to miss */
 .subtle-flag-line {
   color: rgba(0, 255, 153, 0.22);
   font-size: 0.84rem;
