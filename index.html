@@ -109,7 +109,13 @@ document.addEventListener("DOMContentLoaded", () => {
     "FLAG{LEVEL8_YOUR_FLAG}"
   ];
 
-  const level9Flag = "FLAG{LEVEL9_YOUR_FLAG}";
+  const level9Flag = "FLAG{NULL_CODE_RESTORED}";
+  setTimeout(() => {
+  console.warn(
+    "%c[NULL TRACE] observer detected\nresidual fragment recovered -> " + level9Flag + "\ncontinuing mirror cleanup...",
+    "color:#00ff99;background:#000;font-family:monospace;padding:4px 6px;"
+  );
+}, 2200);
 
   const logs = [
     "NODE CORE ACCESSED",
