@@ -8,11 +8,41 @@
 </head>
 <body class="node9">
 
+  <!-- BOOT SCREEN -->
+  <div id="boot-screen" class="boot-screen">
+    <div class="boot-box">
+      <div class="boot-title">NULL RECOVERY INTERFACE</div>
+
+      <div class="boot-text">
+        Secure recovery node detected.<br />
+        Initializing distributed reconstruction protocol.
+      </div>
+
+      <form id="boot-form" class="boot-form" autocomplete="off">
+        <div class="boot-input-wrap">
+          <span class="boot-prompt">&gt;</span>
+          <input
+            id="boot-input"
+            class="boot-input"
+            type="text"
+            placeholder="initialize node"
+            aria-label="initialize node"
+            autofocus
+          />
+        </div>
+
+        <button type="submit" id="boot-btn" class="boot-btn">BOOT</button>
+      </form>
+
+      <div class="boot-note">fullscreen required to continue</div>
+    </div>
+  </div>
+
   <!-- Background audio -->
-  <audio id="bg-audio" src="/audio/finale.mp3" autoplay loop></audio>
+  <audio id="bg-audio" src="/audio/finale.mp3" loop></audio>
 
   <!-- LOG SCREEN -->
-  <div id="log-screen" class="log-screen">
+  <div id="log-screen" class="log-screen hidden">
     <div class="crt-overlay"></div>
     <div id="log-container" class="log-container"></div>
   </div>
@@ -49,8 +79,8 @@
     <h1 class="restored-heading">NULL CODE RESTORED</h1>
 
     <p class="complete-note">
-      Challenge Complete.<br/>
-      The distributed fragments have been reconstructed.<br/>
+      Challenge Complete.<br />
+      The distributed fragments have been reconstructed.<br />
       You have restored the signal.
     </p>
 
@@ -77,15 +107,6 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   const level9Flag = "FLAG{LEVEL9_YOUR_FLAG}";
-
-  setTimeout(() => {
-
-console.warn(
-"%cSTOP!\n\nThis console is part of the NULL recovery interface.\nManual intervention may corrupt memory shards.\n\ntrace fragment: " + level9Flag,
-"color:red; font-size:14px; font-family:monospace;"
-);
-
-}, 2500);
 
   const logs = [
     "NODE CORE ACCESSED",
@@ -177,6 +198,10 @@ console.warn(
     "silent branch collapsed"
   ];
 
+  const bootScreen = document.getElementById("boot-screen");
+  const bootForm = document.getElementById("boot-form");
+  const bootInput = document.getElementById("boot-input");
+
   const logContainer = document.getElementById("log-container");
   const shutter = document.getElementById("shutter");
   const logScreen = document.getElementById("log-screen");
@@ -189,17 +214,9 @@ console.warn(
   const postFootnote = document.getElementById("post-footnote");
   const bgAudio = document.getElementById("bg-audio");
 
-  if (bgAudio) {
-    bgAudio.play().catch(() => {
-      document.addEventListener("click", function resumeAudio() {
-        bgAudio.play().catch(() => {});
-        document.removeEventListener("click", resumeAudio);
-      });
-    });
-  }
-
   let logIndex = 0;
   let hiddenFlagInjected = false;
+  let booted = false;
 
   function timestamp() {
     const d = new Date();
@@ -300,7 +317,7 @@ console.warn(
   }
 
   function corruptChar(char) {
-    const pool = "!@#$%^&*()_+-=[]{};:<>?/\\|~";
+    const pool = "!@#$%^&*()_+-=[]{};:<>?/\\\\|~";
     if (char === " ") return " ";
     return pool[Math.floor(Math.random() * pool.length)];
   }
@@ -511,7 +528,42 @@ console.warn(
     setTimeout(showPostCredit, 3500);
   }
 
-  nextLog();
+  async function startSequence() {
+    if (booted) return;
+    booted = true;
+
+    try {
+      await document.documentElement.requestFullscreen();
+    } catch (e) {
+      // fullscreen can fail silently on some browsers
+    }
+
+    try {
+      await bgAudio.play();
+    } catch (e) {
+      // autoplay may still be blocked
+    }
+
+    bootScreen.classList.add("boot-screen-hidden");
+
+    setTimeout(() => {
+      bootScreen.classList.add("hidden");
+      logScreen.classList.remove("hidden");
+      nextLog();
+    }, 450);
+  }
+
+  bootForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await startSequence();
+  });
+
+  bootInput.addEventListener("keydown", async (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      await startSequence();
+    }
+  });
 });
 </script>
 
