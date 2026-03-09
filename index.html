@@ -91,6 +91,8 @@ document.addEventListener("DOMContentLoaded", () => {
     "MERGING DISTRIBUTED INSTANCES..."
   ];
 
+  const hiddenFlagIndex = Math.floor(Math.random() * (logs.length - 3)) + 2;
+
   const preNoise = [
     "allocating node buffers...",
     "syncing distributed state...",
@@ -132,6 +134,40 @@ document.addEventListener("DOMContentLoaded", () => {
     "decryption lattice aligned"
   ];
 
+  const errorNoise = [
+    "corrupted shard encountered",
+    "entropy drift detected",
+    "invalid parity block",
+    "mirror desync detected",
+    "signal instability detected",
+    "checksum mismatch",
+    "fragment reconstruction failed"
+  ];
+
+  const warningNoise = [
+    "retrying damaged sector",
+    "fallback node engaged",
+    "repair routine invoked",
+    "stale mirror detected",
+    "fragment latency above threshold"
+  ];
+
+  const flagVariants = [
+    () => `residual echo persisted -> ${level9Flag}`,
+    () => `mirror artifact detected : ${level9Flag}`,
+    () => `orphan metadata recovered ${level9Flag}`,
+    () => `trace fragment survived ${level9Flag}`
+  ];
+
+  const overwriteVariants = [
+    "mirror artifact cleared",
+    "residual echo discarded",
+    "orphan metadata pruned",
+    "trace fragment invalidated",
+    "fallback mirror resynced",
+    "silent branch collapsed"
+  ];
+
   const logContainer = document.getElementById("log-container");
   const shutter = document.getElementById("shutter");
   const logScreen = document.getElementById("log-screen");
@@ -154,6 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   let logIndex = 0;
+  let hiddenFlagInjected = false;
 
   function timestamp() {
     const d = new Date();
@@ -188,7 +225,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function createNoiseLine() {
     const text = `${timestamp()} [${randomModule()}] ${randomHex()} :: ${preNoise[Math.floor(Math.random() * preNoise.length)]}`;
-    const cls = Math.random() > 0.7 ? "dim-line" : "";
+    const cls = Math.random() > 0.72 ? "dim-line" : "";
     createLogLine(text, cls);
   }
 
@@ -196,6 +233,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const text = `${timestamp()} [status] ${randomHex()} :: ${followupNoise[Math.floor(Math.random() * followupNoise.length)]}`;
     const cls = Math.random() > 0.55 ? "status-line" : "dim-line";
     createLogLine(text, cls);
+  }
+
+  function createWarningLine() {
+    const text = `${timestamp()} [warn] ${randomHex()} :: ${warningNoise[Math.floor(Math.random() * warningNoise.length)]}`;
+    createLogLine(text, "warn-line");
+  }
+
+  function createErrorLine() {
+    const text = `${timestamp()} [error] ${randomHex()} :: ${errorNoise[Math.floor(Math.random() * errorNoise.length)]}`;
+    createLogLine(text, "error-line");
   }
 
   function createDivider() {
@@ -288,23 +335,31 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function createHiddenFlagLine() {
-    const subtleLine = document.createElement("div");
-    subtleLine.className = "log-line subtle-flag-line";
-    subtleLine.textContent = `${timestamp()} [mirror] ${randomHex()} :: residual echo persisted -> ${level9Flag}`;
-    logContainer.appendChild(subtleLine);
-    scrollLogsToBottom();
+  function injectBriefHiddenFlag() {
+    return new Promise((resolve) => {
+      const variant = flagVariants[Math.floor(Math.random() * flagVariants.length)]();
+      const overwrite = overwriteVariants[Math.floor(Math.random() * overwriteVariants.length)];
+      const line = createLogLine(
+        `${timestamp()} [mirror] ${randomHex()} :: ${variant}`,
+        "subtle-flag-line"
+      );
+
+      setTimeout(() => {
+        line.className = "log-line dim-line";
+        line.textContent = `${timestamp()} [mirror] ${randomHex()} :: ${overwrite}`;
+        scrollLogsToBottom();
+        resolve();
+      }, 700);
+    });
   }
 
   async function nextLog() {
     if (logIndex >= logs.length) {
       if (Math.random() > 0.25) createNoiseLine();
-      if (Math.random() > 0.4) createStatusLine();
+      if (Math.random() > 0.45) createStatusLine();
       if (Math.random() > 0.35) createChecksumLine();
-
-      createHiddenFlagLine();
-
-      if (Math.random() > 0.3) createStatusLine();
+      if (Math.random() > 0.7) createWarningLine();
+      if (Math.random() > 0.86) createErrorLine();
       if (Math.random() > 0.45) createDivider();
 
       setTimeout(triggerShutter, 1800);
@@ -315,18 +370,27 @@ document.addEventListener("DOMContentLoaded", () => {
     for (let i = 0; i < noiseCount; i++) {
       createNoiseLine();
       if (Math.random() > 0.55) createStatusLine();
-      if (Math.random() > 0.72) createChecksumLine();
-      if (Math.random() > 0.88) createRetryLine();
-      if (Math.random() > 0.85) createDivider();
+      if (Math.random() > 0.64) createWarningLine();
+      if (Math.random() > 0.74) createChecksumLine();
+      if (Math.random() > 0.86) createRetryLine();
+      if (Math.random() > 0.9) createErrorLine();
+      if (Math.random() > 0.87) createDivider();
+    }
+
+    if (!hiddenFlagInjected && logIndex === hiddenFlagIndex) {
+      hiddenFlagInjected = true;
+      await injectBriefHiddenFlag();
     }
 
     await typeLine(logs[logIndex]);
 
     const extraAfterMain = Math.floor(Math.random() * 3) + 1;
     for (let i = 0; i < extraAfterMain; i++) {
-      if (Math.random() > 0.25) createStatusLine();
-      if (Math.random() > 0.6) createChecksumLine();
-      if (Math.random() > 0.82) createNoiseLine();
+      if (Math.random() > 0.22) createStatusLine();
+      if (Math.random() > 0.48) createWarningLine();
+      if (Math.random() > 0.58) createChecksumLine();
+      if (Math.random() > 0.76) createNoiseLine();
+      if (Math.random() > 0.88) createErrorLine();
     }
 
     if (Math.random() > 0.2) {
