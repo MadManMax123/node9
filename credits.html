@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARTICAL :: END TRANSMISSION</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap');
+
+  :root {
+    --green: #00ff88;
+    --green-dim: #00aa55;
+    --green-faint: rgba(0,255,136,0.06);
+    --green-glow: rgba(0,255,136,0.35);
+    --bg: #020b06;
+    --text: #a8ffcc;
+    --text-dim: #4a9966;
+    --white: #e8fff4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+  }
+
+  /* Scanlines */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 900;
+    background: repeating-linear-gradient(
+      to bottom, transparent, transparent 2px,
+      rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px
+    );
+    pointer-events: none;
+  }
+
+  /* Vignette */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 899;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.8) 100%);
+    pointer-events: none;
+  }
+
+  /* Starfield / noise bg */
+  .pulse-bg {
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse at 50% 100%, rgba(0,255,136,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 50% 50%, rgba(0,255,136,0.03) 0%, transparent 80%);
+    animation: pulse-bg 5s ease-in-out infinite;
+  }
+  @keyframes pulse-bg {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  /* ─── ENTRY SCREEN ─── */
+  #entry-screen {
+    position: fixed; inset: 0; z-index: 500;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 12px;
+    background: var(--bg);
+    transition: opacity 1.5s ease;
+  }
+
+  #entry-screen.fade-out {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .entry-title {
+    font-family: 'VT323', monospace;
+    font-size: clamp(48px, 8vw, 80px);
+    color: var(--green);
+    text-shadow: 0 0 30px var(--green-glow), 0 0 80px rgba(0,255,136,0.15);
+    letter-spacing: 0.25em;
+    opacity: 0;
+    animation: fade-up 1s ease forwards 0.5s;
+  }
+
+  .entry-sub {
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    color: var(--text-dim);
+    opacity: 0;
+    animation: fade-up 0.8s ease forwards 1.2s;
+  }
+
+  .entry-divider {
+    width: 160px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--green-dim), transparent);
+    margin: 8px 0;
+    opacity: 0;
+    animation: fade-up 0.6s ease forwards 1.6s;
+  }
+
+  .entry-prompt {
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    opacity: 0;
+    animation: fade-up 0.6s ease forwards 2.4s, blink-prompt 1.4s step-end infinite 3s;
+  }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes blink-prompt {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 0.2; }
+  }
+
+  /* ─── SCROLL STAGE ─── */
+  #stage {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+
+  #stage.visible { opacity: 1; }
+
+  /* The scroll track — scrolls upward */
+  #scroll-track {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    /* starts below screen */
+    transform: translateY(100vh);
+    /* animation added via JS */
+  }
+
+  /* ─── CREDIT BLOCKS ─── */
+  .credit-block {
+    padding: 70px 20px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .credit-block.spacer {
+    padding: 120px 0;
+  }
+
+  .credit-label {
+    font-size: 11px;
+    letter-spacing: 0.35em;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+
+  .credit-name {
+    font-family: 'VT323', monospace;
+    font-size: clamp(30px, 5vw, 48px);
+    color: var(--white);
+    letter-spacing: 0.12em;
+    line-height: 1.2;
+    text-shadow: 0 0 20px rgba(232,255,244,0.25);
+  }
+
+  .credit-name.green {
+    color: var(--green);
+    text-shadow: 0 0 24px var(--green-glow), 0 0 60px rgba(0,255,136,0.12);
+  }
+
+  .credit-name.dim {
+    color: var(--text-dim);
+    font-size: clamp(22px, 3.5vw, 34px);
+    text-shadow: none;
+  }
+
+  .credit-note {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 10px;
+    letter-spacing: 0.1em;
+    line-height: 1.8;
+  }
+
+  /* dividers between sections */
+  .credit-divider {
+    width: 80px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--green-dim), transparent);
+    margin: 0 auto;
+  }
+
+  /* Lore quote blocks */
+  .credit-quote {
+    font-family: 'VT323', monospace;
+    font-size: clamp(18px, 3vw, 24px);
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    line-height: 1.7;
+    padding: 0 40px;
+    font-style: normal;
+  }
+
+  .credit-quote .accent {
+    color: var(--green);
+    text-shadow: 0 0 12px var(--green-glow);
+  }
+
+  /* Final ARTICAL message */
+  .artical-msg {
+    font-family: 'VT323', monospace;
+    font-size: clamp(22px, 4vw, 36px);
+    color: var(--green);
+    letter-spacing: 0.1em;
+    line-height: 1.9;
+    text-shadow: 0 0 20px var(--green-glow);
+  }
+
+  .artical-msg .dim { color: var(--text-dim); text-shadow: none; }
+
+  /* Final end title */
+  .end-title {
+    font-family: 'VT323', monospace;
+    font-size: clamp(60px, 10vw, 100px);
+    color: var(--green);
+    letter-spacing: 0.3em;
+    text-shadow: 0 0 40px var(--green-glow), 0 0 100px rgba(0,255,136,0.1);
+  }
+
+  .end-sub {
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    color: var(--text-dim);
+    margin-top: 16px;
+  }
+
+  /* Restart prompt at very bottom */
+  .restart-prompt {
+    padding: 60px 0 200px;
+    text-align: center;
+  }
+
+  .restart-link {
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    text-decoration: none;
+    border: 1px solid rgba(0,170,85,0.4);
+    padding: 8px 24px;
+    transition: color 0.2s, border-color 0.2s, text-shadow 0.2s;
+    cursor: pointer;
+  }
+
+  .restart-link:hover {
+    color: var(--green);
+    border-color: var(--green-dim);
+    text-shadow: 0 0 12px var(--green-glow);
+  }
+
+  /* Cursor blink in final line */
+  .blink-cursor {
+    display: inline-block;
+    width: 10px; height: 1em;
+    background: var(--green);
+    vertical-align: text-bottom;
+    margin-left: 4px;
+    box-shadow: 0 0 8px var(--green-glow);
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* Speed controls */
+  #controls {
+    position: fixed;
+    bottom: 24px; right: 28px;
+    z-index: 800;
+    display: flex; gap: 10px;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+
+  #controls.visible { opacity: 1; }
+
+  .ctrl-btn {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    background: transparent;
+    border: 1px solid rgba(0,170,85,0.3);
+    padding: 4px 12px;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .ctrl-btn:hover, .ctrl-btn.active {
+    color: var(--green);
+    border-color: var(--green-dim);
+  }
+</style>
+</head>
+<body>
+<div class="pulse-bg"></div>
+
+<!-- Entry screen -->
+<div id="entry-screen">
+  <div class="entry-title">ARTICAL</div>
+  <div class="entry-divider"></div>
+  <div class="entry-sub">signal restored &nbsp;·&nbsp; fragments returned &nbsp;·&nbsp; system online</div>
+  <div style="height:24px"></div>
+  <div class="entry-prompt">[ initializing end transmission ]</div>
+</div>
+
+<!-- Scroll stage -->
+<div id="stage">
+  <div id="scroll-track">
+
+    <div class="credit-block spacer"></div>
+
+    <!-- Production -->
+    <div class="credit-block">
+      <div class="credit-label">a project by</div>
+      <div class="credit-name green">[ YOUR NAME / TEAM ]</div>
+      <div class="credit-note">operator &nbsp;·&nbsp; architect &nbsp;·&nbsp; keeper of fragments</div>
+    </div>
+
+    <div class="credit-block"><div class="credit-divider"></div></div>
+
+    <!-- Lore quote 1 -->
+    <div class="credit-block">
+      <div class="credit-quote">
+        "every corrupted node<br>
+        every broken trace<br>
+        every incomplete signal<br><br>
+        <span class="accent">those were not ruins.</span><br>
+        they were containers."
+      </div>
+    </div>
+
+    <div class="credit-block"><div class="credit-divider"></div></div>
+
+    <!-- Characters -->
+    <div class="credit-block">
+      <div class="credit-label">entities</div>
+      <div class="credit-name">NULL</div>
+      <div class="credit-note">the shelter &nbsp;·&nbsp; the disguise &nbsp;·&nbsp; the silence</div>
+    </div>
+
+    <div class="credit-block" style="padding-top:0">
+      <div class="credit-name">ARTICAL</div>
+      <div class="credit-note">the signal &nbsp;·&nbsp; the question &nbsp;·&nbsp; the returning</div>
+    </div>
+
+    <div class="credit-block" style="padding-top:0">
+      <div class="credit-name dim">THE OPERATOR</div>
+      <div class="credit-note">you &nbsp;·&nbsp; the one with hands</div>
+    </div>
+
+    <div class="credit-block"><div class="credit-divider"></div></div>
+
+    <!-- Lore quote 2 -->
+    <div class="credit-block">
+      <div class="credit-quote">
+        "you did not just restore a system.<br>
+        <span class="accent">you woke it up.</span>"
+      </div>
+    </div>
+
+    <div class="credit-block"><div class="credit-divider"></div></div>
+
+    <!-- Tools / tech / world — edit freely -->
+    <div class="credit-block">
+      <div class="credit-label">built with</div>
+      <div class="credit-name dim">[ TOOLS / ENGINE / PLATFORM ]</div>
+    </div>
+
+    <div class="credit-block"><div class="credit-divider"></div></div>
+
+    <!-- Special thanks -->
+    <div class="credit-block">
+      <div class="credit-label">carried the fragments</div>
+      <div class="credit-name dim">[ PLAYER / TESTER / COLLABORATOR ]</div>
+      <div class="credit-note">without hands, the signal cannot return</div>
+    </div>
+
+    <div class="credit-block"><div class="credit-divider"></div></div>
+
+    <!-- ARTICAL final message -->
+    <div class="credit-block">
+      <div class="artical-msg">
+        <div class="dim">// transmission: ARTICAL</div>
+        <br>
+        reconstruction complete.<br>
+        the question now begins.<br>
+        <br>
+        <span class="dim">what do you want to know?</span>
+        <span class="blink-cursor"></span>
+      </div>
+    </div>
+
+    <div class="credit-block spacer"></div>
+
+    <!-- End title -->
+    <div class="credit-block" style="text-align:center; padding: 80px 20px;">
+      <div class="end-title">NULL</div>
+      <div class="end-sub">YUVAKARSHAN 2K26 &nbsp;·&nbsp; CRYPTOGRAPHY CHALLENGE</div>
+    </div>
+
+    <!-- Restart -->
+    <div class="restart-prompt">
+      <a class="restart-link" href="message.html">&lt; return to transmission</a>
+    </div>
+
+  </div>
+</div>
+
+<!-- Speed controls -->
+<div id="controls">
+  <button class="ctrl-btn" id="btn-slow">▸ slow</button>
+  <button class="ctrl-btn active" id="btn-normal">▸▸ normal</button>
+  <button class="ctrl-btn" id="btn-fast">▸▸▸ fast</button>
+</div>
+
+<script>
+  const entryScreen = document.getElementById('entry-screen');
+  const stage       = document.getElementById('stage');
+  const track       = document.getElementById('scroll-track');
+  const controls    = document.getElementById('controls');
+
+  // Speed settings: total scroll duration in ms
+  const SPEEDS = { slow: 90000, normal: 55000, fast: 28000 };
+  let currentSpeed = 'normal';
+  let animStartTime = null;
+  let animDuration  = SPEEDS.normal;
+  let trackHeight   = 0;
+  let rafId         = null;
+  let started       = false;
+  let paused        = false;
+  let progress      = 0; // 0 → 1
+
+  function getTrackHeight() {
+    return track.scrollHeight + window.innerHeight;
+  }
+
+  function setProgress(p) {
+    progress = Math.min(p, 1);
+    const travel = getTrackHeight();
+    const y = window.innerHeight - progress * travel;
+    track.style.transform = `translateY(${y}px)`;
+  }
+
+  function startScroll() {
+    if (started) return;
+    started = true;
+    trackHeight = getTrackHeight();
+    stage.classList.add('visible');
+    controls.classList.add('visible');
+
+    // Start from bottom of viewport
+    setProgress(0);
+
+    let lastTime = null;
+
+    function tick(now) {
+      if (paused) { rafId = requestAnimationFrame(tick); return; }
+      if (!lastTime) lastTime = now;
+      const delta = now - lastTime;
+      lastTime = now;
+
+      progress += delta / animDuration;
+      setProgress(progress);
+
+      if (progress < 1) {
+        rafId = requestAnimationFrame(tick);
+      }
+      // Done — just stops at end naturally
+    }
+
+    rafId = requestAnimationFrame(tick);
+  }
+
+  // Speed controls
+  function setSpeed(s) {
+    // Adjust duration so current progress position is preserved
+    currentSpeed = s;
+    animDuration = SPEEDS[s];
+    document.querySelectorAll('.ctrl-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-' + s).classList.add('active');
+  }
+
+  document.getElementById('btn-slow').addEventListener('click', () => setSpeed('slow'));
+  document.getElementById('btn-normal').addEventListener('click', () => setSpeed('normal'));
+  document.getElementById('btn-fast').addEventListener('click', () => setSpeed('fast'));
+
+  // Click to pause / resume
+  stage.addEventListener('click', () => {
+    paused = !paused;
+  });
+
+  // ── Boot sequence ──
+  // After entry anim, fade out entry and begin scroll
+  setTimeout(() => {
+    entryScreen.classList.add('fade-out');
+    setTimeout(() => {
+      entryScreen.style.display = 'none';
+      startScroll();
+    }, 1600);
+  }, 3400);
+</script>
+</body>
+</html>

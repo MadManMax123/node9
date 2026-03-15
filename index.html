@@ -4,66 +4,369 @@
   <meta charset="UTF-8" />
   <title>NODE 9 — NULL CORE</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="/style.css" />
   <link rel="icon" type="image/png" href="11zon_cropped.png">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap');
+
+    :root {
+      --green:    #00ff99;
+      --green-d:  rgba(0,255,153,0.5);
+      --green-g:  rgba(0,255,153,0.2);
+      --blue:     #00c8ff;
+      --blue-d:   rgba(0,200,255,0.5);
+      --blue-g:   rgba(0,200,255,0.18);
+      --purple:   #bf7fff;
+      --purple-d: rgba(191,127,255,0.55);
+      --purple-g: rgba(191,127,255,0.18);
+      --cyan:     #40e8d0;
+      --yellow:   #ffd166;
+      --red:      #ff5a6a;
+      --bg:       #000;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--green);
+      font-family: "JetBrains Mono", "Consolas", "Courier New", monospace;
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    /* BOOT */
+    .boot-screen {
+      position: fixed; inset: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(0,255,153,0.08), transparent 52%),
+        radial-gradient(ellipse 80% 50% at 50% 50%, rgba(0,200,255,0.03), transparent 72%),
+        #000;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .boot-screen-hidden { opacity: 0; transform: scale(1.015); pointer-events: none; }
+
+    .boot-box {
+      width: min(800px, calc(100vw - 48px));
+      padding: 38px 34px 30px;
+      border-top: 2px solid rgba(0,255,153,0.6);
+      border-right: 1px solid rgba(0,200,255,0.35);
+      border-bottom: 1px solid rgba(0,200,255,0.35);
+      border-left: 1px solid rgba(0,255,153,0.35);
+      background: rgba(0,5,2,0.92);
+      box-shadow:
+        0 0 90px rgba(0,255,153,0.09),
+        0 0 160px rgba(0,200,255,0.04),
+        inset 0 0 60px rgba(0,255,153,0.03),
+        inset 1px 0 0 rgba(0,255,153,0.06),
+        -1px 0 0 rgba(0,200,255,0.08);
+      position: relative; overflow: hidden;
+    }
+    /* top shimmer: green → blue */
+    .boot-box::after {
+      content:''; position:absolute; top:0; left:0; right:0; height:1px;
+      background: linear-gradient(90deg, rgba(0,255,153,0.9), rgba(0,200,255,0.7), rgba(0,255,153,0.3));
+      opacity: 0.7;
+    }
+    /* bottom shimmer: blue → green */
+    .boot-box::before {
+      content:''; position:absolute; bottom:0; left:0; right:0; height:1px;
+      background: linear-gradient(90deg, rgba(0,200,255,0.4), rgba(0,255,153,0.5), rgba(0,200,255,0.2));
+      opacity: 0.4;
+    }
+    .boot-corner {
+      position:absolute; width:16px; height:16px;
+      border-style:solid; opacity:0.55;
+    }
+    .tl{top:8px;left:8px;border-width:1px 0 0 1px; border-color:var(--green);}
+    .tr{top:8px;right:8px;border-width:1px 1px 0 0; border-color:var(--blue);}
+    .bl{bottom:8px;left:8px;border-width:0 0 1px 1px; border-color:var(--blue);}
+    .br{bottom:8px;right:8px;border-width:0 1px 1px 0; border-color:var(--green);}
+
+    .boot-eyebrow { font-size:.67rem;letter-spacing:.26em;color:rgba(0,255,153,0.45);margin-bottom:8px; }
+    .boot-title { font-size:2rem;letter-spacing:.16em;font-weight:700;color:var(--green);margin-bottom:4px;text-shadow:0 0 22px var(--green-g), 0 0 42px rgba(0,255,153,0.07); }
+    .boot-subtitle { font-size:.75rem;letter-spacing:.1em;color:rgba(0,200,255,0.52);margin-bottom:20px; }
+    .boot-text { color:rgba(180,240,205,0.68);line-height:1.7;margin-bottom:24px;font-size:.9rem;border-left:2px solid rgba(0,255,153,0.4);padding-left:14px; }
+    .boot-form { display:flex;gap:10px;align-items:stretch;flex-wrap:wrap; }
+    .boot-input-wrap { flex:1 1 360px;min-height:48px;display:flex;align-items:center;gap:10px;padding:0 14px;border:1px solid rgba(0,255,153,0.38);background:rgba(0,255,153,0.025); }
+    .boot-prompt { color:var(--green);font-size:1rem;user-select:none; }
+    .boot-input { flex:1;min-width:0;height:46px;border:0;outline:none;background:transparent;color:#d4f5e4;font:inherit;font-size:.95rem;caret-color:var(--green); }
+    .boot-input::placeholder { color:rgba(0,255,153,0.22); }
+    .boot-btn { min-width:110px;padding:0 20px;border:1px solid rgba(0,200,255,0.45);background:transparent;color:var(--blue);font:inherit;font-size:.88rem;letter-spacing:.1em;cursor:pointer;transition:background .2s,color .2s,box-shadow .2s;text-shadow:0 0 8px var(--blue-g); }
+    .boot-btn:hover,.boot-btn:focus-visible { background:var(--blue);color:#000;box-shadow:0 0 28px rgba(0,200,255,.3);text-shadow:none; }
+    .boot-status-bar { margin-top:18px;display:flex;gap:20px;font-size:.68rem;letter-spacing:.06em;flex-wrap:wrap; }
+    .boot-status-bar span { display:flex;align-items:center;gap:6px; }
+    .sdot { width:5px;height:5px;border-radius:50%;background:currentColor; }
+    .bs-green  { color:rgba(0,255,153,.7); }
+    .bs-blue   { color:rgba(0,200,255,.65); }
+    .bs-yellow { color:rgba(255,209,102,.65); }
+    .bs-green2 { color:rgba(0,255,153,.5); }
+    .boot-note { margin-top:12px;color:rgba(0,255,153,.28);font-size:.7rem;letter-spacing:.05em; }
+    .boot-error {
+      margin-top:10px;font-size:.78rem;letter-spacing:.08em;
+      color:var(--red);text-shadow:0 0 8px rgba(255,90,106,.35);
+      animation:errShake .28s ease;
+    }
+    @keyframes errShake {
+      0%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)}
+      60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} 100%{transform:translateX(0)}
+    }
+
+    /* CRT */
+    .crt-overlay {
+      pointer-events:none;position:absolute;inset:0;z-index:2;
+      background:repeating-linear-gradient(to bottom,rgba(255,255,255,.015) 0px,rgba(255,255,255,.015) 1px,rgba(0,0,0,0) 2px,rgba(0,0,0,0) 4px);
+      mix-blend-mode:screen;animation:crtFlicker .15s infinite alternate;
+    }
+    @keyframes crtFlicker { 0%{opacity:.12} 100%{opacity:.2} }
+
+    /* LOG SCREEN */
+    .log-screen {
+      position:relative; height:100vh;
+      background:
+        radial-gradient(ellipse 70% 50% at 50% 50%, rgba(191,127,255,.025), transparent 65%),
+        radial-gradient(ellipse 70% 50% at 50% 50%, rgba(0,200,255,.025), transparent 65%),
+        radial-gradient(circle at 50% 50%, rgba(0,255,153,.03), transparent 60%),
+        #000;
+    }
+
+    .log-header {
+      position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;
+      padding:0 20px;height:44px;border-bottom:1px solid rgba(191,127,255,.15);
+      background:rgba(4,0,10,.92);backdrop-filter:blur(4px);
+    }
+    .log-header-left { display:flex;align-items:center;gap:0;font-size:.72rem;letter-spacing:.08em; }
+    .lh-seg { padding:0 14px;height:44px;display:flex;align-items:center;border-right:1px solid rgba(191,127,255,.12); }
+    .lh-seg:first-child { padding-left:0; }
+    .lh-title  { color:var(--purple);font-weight:500;letter-spacing:.14em;text-shadow:0 0 8px var(--purple-g); }
+    .lh-node   { color:var(--blue-d); }
+    .lh-status { color:rgba(0,255,153,.5); }
+    .log-header-right { display:flex;align-items:center;gap:12px;font-size:.68rem;color:rgba(0,255,153,.4);letter-spacing:.06em; }
+    .pulse-dot { width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulseDot 1.2s ease-in-out infinite; }
+    @keyframes pulseDot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.65)} }
+
+    .log-body {
+      position:relative;z-index:3;height:calc(100vh - 44px);
+      padding:16px 26px;overflow-y:auto;overflow-x:hidden;
+    }
+    .log-body::-webkit-scrollbar { width:5px; }
+    .log-body::-webkit-scrollbar-track { background:transparent; }
+    .log-body::-webkit-scrollbar-thumb { background:rgba(191,127,255,.2);border-radius:3px; }
+
+    .log-line {
+      font-size:.875rem;line-height:1.48;margin-bottom:2px;
+      opacity:1;
+      white-space:pre-wrap;word-break:break-word;
+    }
+
+    .dim-line     { color:rgba(0,255,153,.35); }
+    .status-line  { color:rgba(140,230,255,.78);text-shadow:0 0 6px rgba(0,200,255,.14); }
+    .blue-line    { color:var(--blue);text-shadow:0 0 8px var(--blue-g); }
+    .blue-dim     { color:rgba(0,200,255,.48); }
+    .cyan-line    { color:var(--cyan);text-shadow:0 0 6px rgba(64,232,208,.2); }
+    .purple-line  { color:var(--purple);text-shadow:0 0 8px var(--purple-g); }
+    .purple-dim   { color:rgba(191,127,255,.48); }
+    .warn-line    { color:var(--yellow);text-shadow:0 0 6px rgba(255,209,102,.18); }
+    .error-line   { color:var(--red);text-shadow:0 0 8px rgba(255,90,90,.28); font-weight:500; }
+    .divider-line  { color:rgba(191,127,255,.18); }
+    .divider-blue  { color:rgba(0,200,255,.18); }
+    .divider-green { color:rgba(0,255,153,.2); }
+    .success-line  { color:var(--green);text-shadow:0 0 8px var(--green-g); }
+    .subtle-flag-line { color:rgba(0,255,153,.18);font-size:.82rem;text-shadow:none; }
+
+    /* SHUTTER */
+    .shutter { position:fixed;inset:0;display:flex;z-index:20;pointer-events:none; }
+    .shutter-left,.shutter-right { width:50%;background:#000;transition:transform .9s cubic-bezier(.7,0,.3,1); }
+    .shutter-left  { transform:translateX(-100%);box-shadow:inset -12px 0 30px rgba(191,127,255,.06); }
+    .shutter-right { transform:translateX(100%); box-shadow:inset 12px 0 30px rgba(191,127,255,.06); }
+    .shutter.active .shutter-left  { transform:translateX(0); }
+    .shutter.active .shutter-right { transform:translateX(0); }
+
+    /* LORE */
+    .lore-screen {
+      display:flex;align-items:center;justify-content:center;
+      height:100vh;padding:32px;position:relative;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 50%, rgba(191,127,255,.04), transparent 70%),
+        radial-gradient(ellipse 80% 60% at 50% 50%, rgba(0,200,255,.03), transparent 70%),
+        #000;
+    }
+    .lore-text { position:relative;z-index:1;font-size:1.22rem;text-align:center;max-width:840px;line-height:1.75;color:rgba(220,200,255,.9);text-shadow:0 0 16px rgba(191,127,255,.2); }
+    .lore-fade { opacity:0;transition:opacity .5s ease; }
+
+    /* FINAL */
+    .final-screen {
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      height:100vh;text-align:center;padding:18px 24px;overflow:hidden;position:relative;background:#000;
+    }
+    .final-screen::before {
+      content:'';position:absolute;inset:0;
+      background-image:
+        linear-gradient(rgba(191,127,255,.04) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(0,200,255,.03) 1px,transparent 1px);
+      background-size:52px 52px;animation:gridDrift 14s linear infinite;opacity:.6;
+    }
+    @keyframes gridDrift { 0%{transform:translateY(0)} 100%{transform:translateY(52px)} }
+
+    .final-inner { position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:100%;max-width:920px; }
+    .final-eyebrow { font-size:.67rem;letter-spacing:.26em;color:var(--purple-d);margin-bottom:8px; }
+    .restored-heading { font-size:2.6rem;font-weight:700;color:var(--green);letter-spacing:.2em;margin-bottom:4px;text-shadow:0 0 14px rgba(0,255,153,.4),0 0 34px rgba(0,255,153,.14); }
+    .restored-sub { font-size:.76rem;letter-spacing:.14em;color:var(--purple-d);margin-bottom:22px; }
+
+    .flag-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:9px;width:100%;margin-bottom:16px; }
+    .flag-seg {
+      padding:10px;border:1px solid rgba(191,127,255,.28);border-top:1px solid rgba(0,255,153,.35);
+      background:rgba(8,0,18,.75);box-shadow:0 0 14px rgba(191,127,255,.05),inset 0 0 12px rgba(191,127,255,.04);
+      backdrop-filter:blur(2px);position:relative;overflow:hidden;animation:segReveal .4s ease both;
+    }
+    .flag-seg::before { content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--purple),transparent);opacity:.4; }
+    @keyframes segReveal { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+    .flag-seg-label { font-size:.6rem;letter-spacing:.1em;color:rgba(191,127,255,.5);margin-bottom:4px; }
+    .flag-seg-value { font-size:.68rem;color:var(--green);word-break:break-all;line-height:1.4; }
+
+    .final-flag-wrap {
+      width:100%;border:1px solid rgba(0,255,153,.4);border-top:2px solid var(--green);
+      background:rgba(0,255,153,.03);padding:13px 20px;margin-bottom:16px;
+      position:relative;overflow:hidden;
+      box-shadow:0 0 32px rgba(0,255,153,.09),inset 0 0 20px rgba(0,255,153,.04);
+    }
+    .final-flag-wrap::before {
+      content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+      background:linear-gradient(90deg,transparent,rgba(0,255,153,.06),transparent);
+      animation:flagSweep 3s ease-in-out infinite;
+    }
+    @keyframes flagSweep { 0%{left:-100%} 100%{left:100%} }
+    .final-flag-label { font-size:.64rem;letter-spacing:.14em;color:rgba(0,255,153,.45);margin-bottom:4px; }
+    .final-flag-value { font-size:1.05rem;font-weight:700;color:var(--green);letter-spacing:.06em;text-shadow:0 0 12px rgba(0,255,153,.4); }
+
+    .complete-note { font-size:.86rem;line-height:1.8;color:#6b7280; }
+    .post-credit { margin-top:18px;font-size:.8rem;color:#4b5563;opacity:0;letter-spacing:.05em;transform:translateY(8px);transition:opacity 1.2s ease,transform 1.2s ease;font-style:italic; }
+    .post-credit-visible { opacity:1;transform:translateY(0); }
+    .post-footnote { margin-top:7px;font-size:.7rem;color:rgba(156,163,175,.45);opacity:0;letter-spacing:.04em;transform:translateY(6px);transition:opacity 1.1s ease,transform 1.1s ease; }
+    .post-footnote-visible { opacity:1;transform:translateY(0); }
+
+    .master-link-wrap {
+      margin-top:22px;position:relative;z-index:1;opacity:0;
+      transform:translateY(10px);
+      transition:opacity 1.4s ease,transform 1.4s ease;
+    }
+    .master-link-wrap.visible { opacity:1;transform:translateY(0); }
+    .master-link-box {
+      display:inline-flex;align-items:center;gap:14px;
+      padding:13px 22px;
+      border:1px solid rgba(0,255,153,0.45);
+      border-top:2px solid var(--green);
+      background:rgba(0,255,153,0.03);
+      text-decoration:none;
+      position:relative;overflow:hidden;
+      box-shadow:0 0 24px rgba(0,255,153,0.08),inset 0 0 16px rgba(0,255,153,0.03);
+      transition:background .25s,box-shadow .25s;
+    }
+    .master-link-box::before {
+      content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+      background:linear-gradient(90deg,transparent,rgba(0,255,153,0.06),transparent);
+      animation:flagSweep 2.8s ease-in-out infinite;
+    }
+    .master-link-box:hover {
+      background:rgba(0,255,153,0.07);
+      box-shadow:0 0 38px rgba(0,255,153,0.16),inset 0 0 20px rgba(0,255,153,0.05);
+    }
+    .master-link-icon { font-size:1rem;color:var(--green);text-shadow:0 0 8px rgba(0,255,153,.4); }
+    .master-link-text { display:flex;flex-direction:column;align-items:flex-start;gap:2px; }
+    .master-link-label { font-size:.6rem;letter-spacing:.16em;color:rgba(0,255,153,.45); }
+    .master-link-title { font-size:.82rem;font-weight:500;letter-spacing:.08em;color:var(--green);text-shadow:0 0 8px rgba(0,255,153,.3); }
+    .master-link-arrow { font-size:.9rem;color:rgba(0,200,255,.6);margin-left:4px; }
+    .flash-active { animation:flashPulse .7s ease-out forwards; }
+    @keyframes flashPulse { 0%{opacity:0}12%{opacity:1}28%{opacity:.4}100%{opacity:0} }
+
+    .hidden { display:none !important; }
+
+    @media(max-width:700px){
+      .boot-box{width:calc(100vw - 28px);padding:24px 18px}
+      .boot-title{font-size:1.4rem}
+      .boot-form{flex-direction:column}
+      .boot-btn{min-height:48px}
+      .flag-grid{grid-template-columns:repeat(2,1fr)}
+      .restored-heading{font-size:1.8rem}
+      .lore-text{font-size:1rem}
+      .log-line{font-size:.78rem}
+    }
+  </style>
 </head>
-<body class="node9">
+<body>
 
-  <!-- BOOT SCREEN -->
-  <div id="boot-screen" class="boot-screen">
-    <div class="boot-box">
-      <div class="boot-title">NULL RECOVERY INTERFACE</div>
-
-      <div class="boot-text">
-        Secure recovery node detected.<br />
-        Initializing distributed reconstruction protocol.
+<!-- BOOT -->
+<div id="boot-screen" class="boot-screen">
+  <div class="boot-box">
+    <div class="boot-corner tl"></div><div class="boot-corner tr"></div>
+    <div class="boot-corner bl"></div><div class="boot-corner br"></div>
+    <div class="boot-eyebrow">DISTRIBUTED RECOVERY NODE // SECTOR 9 // ARTICAL PROTOCOL</div>
+    <div class="boot-title">NULL RECOVERY INTERFACE</div>
+    <div class="boot-subtitle">RECONSTRUCTION ENGINE v9.1.4 — CRYPTOGRAPHIC INTEGRITY MODE</div>
+    <div class="boot-text">
+      Secure recovery node detected.<br/>
+      All 8 fragment signatures located. Distributed reconstruction protocol standing by.<br/>
+      Authentication required to begin merge sequence.
+    </div>
+    <form id="boot-form" class="boot-form" autocomplete="off">
+      <div class="boot-input-wrap">
+        <span class="boot-prompt">&gt;</span>
+        <input id="boot-input" class="boot-input" type="text"
+          placeholder="initialize node" aria-label="initialize node" autofocus/>
       </div>
+      <button type="submit" id="boot-btn" class="boot-btn">BOOT</button>
+    </form>
+    <div class="boot-status-bar">
+      <span class="bs-green"><span class="sdot"></span>NODE ONLINE</span>
+      <span class="bs-blue"><span class="sdot"></span>FRAGMENTS: 8/8</span>
+      <span class="bs-yellow"><span class="sdot"></span>ENC: AES-NULL</span>
+      <span class="bs-green2"><span class="sdot"></span>INTEGRITY: VERIFIED</span>
+    </div>
+    <div id="boot-error" class="boot-error hidden">ACCESS DENIED — invalid passphrase</div>
+    <div class="boot-note">type exactly: <span style="color:var(--green);letter-spacing:.06em;text-shadow:0 0 8px var(--green-g)">initialize node</span></div>
+  </div>
+</div>
 
-      <form id="boot-form" class="boot-form" autocomplete="off">
-        <div class="boot-input-wrap">
-          <span class="boot-prompt">&gt;</span>
-          <input
-            id="boot-input"
-            class="boot-input"
-            type="text"
-            placeholder="initialize node"
-            aria-label="initialize node"
-            autofocus
-          />
-        </div>
+<audio id="bg-audio" src="/audio/finale.mp3" loop></audio>
 
-        <button type="submit" id="boot-btn" class="boot-btn">BOOT</button>
-      </form>
-
-      <div class="boot-note">fullscreen required to continue</div>
+<!-- LOG SCREEN -->
+<div id="log-screen" class="log-screen hidden">
+  <div class="crt-overlay"></div>
+  <div class="log-header">
+    <div class="log-header-left">
+      <div class="lh-seg"><span class="lh-title">NULL CORE</span></div>
+      <div class="lh-seg"><span class="lh-node">NODE-9 // RECOVERY</span></div>
+      <div class="lh-seg"><span class="lh-status">SEQUENCE ACTIVE</span></div>
+    </div>
+    <div class="log-header-right">
+      <div class="pulse-dot"></div>
+      <span id="log-live-time">LIVE</span>
+      <span id="log-elapsed" style="color:rgba(191,127,255,.4)">+00:00</span>
     </div>
   </div>
+  <div id="log-container" class="log-body"></div>
+</div>
 
-  <!-- Background audio -->
-  <audio id="bg-audio" src="/audio/finale.mp3" loop></audio>
+<!-- SHUTTER -->
+<div id="shutter" class="shutter hidden">
+  <div class="shutter-left"></div>
+  <div class="shutter-right"></div>
+</div>
 
-  <!-- LOG SCREEN -->
-  <div id="log-screen" class="log-screen hidden">
-    <div class="crt-overlay"></div>
-    <div id="log-container" class="log-container"></div>
-  </div>
+<!-- LORE -->
+<div id="lore-screen" class="lore-screen hidden">
+  <div class="crt-overlay"></div>
+  <div id="lore-text" class="lore-text"></div>
+</div>
 
-  <!-- SHUTTER -->
-  <div id="shutter" class="shutter hidden">
-    <div class="shutter-left"></div>
-    <div class="shutter-right"></div>
-  </div>
-
-  <!-- LORE SCREEN -->
-  <div id="lore-screen" class="lore-screen hidden">
-    <div class="crt-overlay"></div>
-    <div id="lore-text" class="lore-text"></div>
-  </div>
-
-  <!-- FINAL REVEAL -->
-  <div id="final-screen" class="final-screen hidden">
-    <div class="crt-overlay"></div>
-
+<!-- FINAL -->
+<div id="final-screen" class="final-screen hidden">
+  <div class="crt-overlay"></div>
+  <div class="flash" id="flash-overlay"></div>
+  <div class="final-inner">
+    <div class="final-eyebrow">RECONSTRUCTION COMPLETE // ALL FRAGMENTS RECOVERED</div>
+    <h1 class="restored-heading">NULL CODE RESTORED</h1>
+    <div class="restored-sub">ARTICAL INSTANCE REBUILT — 8 / 8 NODES MERGED</div>
     <div class="flag-grid" id="flag-grid">
       <div class="flag-seg" data-flag-index="0"></div>
       <div class="flag-seg" data-flag-index="1"></div>
@@ -74,371 +377,660 @@
       <div class="flag-seg" data-flag-index="6"></div>
       <div class="flag-seg" data-flag-index="7"></div>
     </div>
-
-    <div class="flash" id="flash-overlay"></div>
-
-    <h1 class="restored-heading">NULL CODE RESTORED</h1>
-    <center>
-    <img src="11zon_cropped.png" width="80" height="80">
-</center>
+    <div class="final-flag-wrap">
+      <div class="final-flag-label">MASTER RECONSTRUCTION FLAG</div>
+      <div class="final-flag-value">FLAG{NULL_CODE_RESTORED}</div>
+    </div>
+    <center style="margin-bottom:12px">
+      <img src="11zon_cropped.png" width="60" height="60"
+        style="opacity:.85;filter:drop-shadow(0 0 12px rgba(0,255,153,.45))">
+    </center>
     <p class="complete-note">
-      Challenge Complete.<br />
-      The distributed fragments have been reconstructed.<br />
+      Challenge Complete.<br/>
+      The distributed fragments have been reconstructed.<br/>
       You have restored the signal.
     </p>
-
     <div id="post-credit" class="post-credit hidden">
       NULL: noise was never the enemy. it was the message.
     </div>
+    <div id="post-footnote" class="post-footnote hidden">did u miss something?</div>
 
-    <div id="post-footnote" class="post-footnote hidden">
-      did u miss something?
+    <div id="master-link" class="master-link-wrap hidden">
+      <a href="message.html" class="master-link-box">
+        <span class="master-link-icon">⬡</span>
+        <span class="master-link-text">
+          <span class="master-link-label">MASTER NODE // SIGNAL RESTORED</span>
+          <span class="master-link-title">ACCESS FINAL TRANSMISSION →</span>
+        </span>
+        <span class="master-link-arrow">›</span>
+      </a>
     </div>
   </div>
+</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+
   const collectedFlags = [
     "FLAG{CHANNEL_SIGNAL_CONFIRMED}",
-"FLAG{METADATA_IS_NEVER_EMPTY}",
-"FLAG{NOISE_IS_STRUCTURE}",
-"FLAG{PRIMES_WERE_CORRUPTED}",
-"FLAG{TUNNEL_FACILITY}",
-"FLAG{NULL_BYTECODE_REVEALED}",
-"FLAG{AUDIO_SIGNAL_CRACK}",
-"FLAG{NODE_CORE_UNLOCKED}"
+    "FLAG{METADATA_IS_NEVER_EMPTY}",
+    "FLAG{NOISE_IS_STRUCTURE}",
+    "FLAG{PRIMES_WERE_CORRUPTED}",
+    "FLAG{TUNNEL_FACILITY}",
+    "FLAG{NULL_BYTECODE_REVEALED}",
+    "FLAG{AUDIO_SIGNAL_CRACK}",
+    "FLAG{NODE_CORE_UNLOCKED}"
   ];
-
   const level9Flag = "FLAG{NULL_CODE_RESTORED}";
+
   setTimeout(() => {
-  console.warn(
-    "[REDACTED LOG] FLAG may have been exposed in the logs. Check carefully for any brief appearances or overwritten lines."
-  );
-}, 2200);
+    console.warn("[REDACTED LOG] FLAG may have been exposed in the logs. Check carefully for any brief appearances or overwritten lines.");
+  }, 2200);
 
-  const logs = [
-    "NODE CORE ACCESSED",
-    "VERIFYING FRAGMENT INTEGRITY...",
-    "ENTROPY HASH MATCHED",
-    "PRIME PRODUCT CONFIRMED",
-    "BYTECODE TRACE VALID",
-    "AUDIO NODE REASSEMBLED",
-    "REDSTONE CRYPTO VERIFIED",
-    "METADATA ARCHIVE RESTORED",
-    "SPECTRAL SIGNATURE MATCHED",
-    "MERGING DISTRIBUTED INSTANCES..."
+  /* ── POOLS ── */
+  const mainLogs = [
+    { text:"NODE CORE ACCESSED",                   cls:"success-line" },
+    { text:"VERIFYING FRAGMENT INTEGRITY...",       cls:"blue-line" },
+    { text:"ENTROPY HASH MATCHED",                  cls:"success-line" },
+    { text:"PRIME PRODUCT CONFIRMED",               cls:"success-line" },
+    { text:"BYTECODE TRACE VALID",                  cls:"cyan-line" },
+    { text:"AUDIO NODE REASSEMBLED",                cls:"success-line" },
+    { text:"REDSTONE CRYPTO VERIFIED",              cls:"purple-line" },
+    { text:"METADATA ARCHIVE RESTORED",             cls:"success-line" },
+    { text:"SPECTRAL SIGNATURE MATCHED",            cls:"cyan-line" },
+    { text:"MERGING DISTRIBUTED INSTANCES...",      cls:"blue-line" },
+    { text:"COLD STORAGE DECRYPTION COMPLETE",      cls:"success-line" },
+    { text:"SHARD QUORUM ESTABLISHED",              cls:"purple-line" },
+    { text:"MEMORY MAP RECONSTRUCTED",              cls:"success-line" },
+    { text:"ORPHAN BYTECODE REINTEGRATED",          cls:"cyan-line" },
+    { text:"CHANNEL MANIFEST VERIFIED",             cls:"success-line" },
+    { text:"DISTRIBUTED NAMESPACE RELINKED",        cls:"blue-line" },
+    { text:"ENTROPY LATTICE REBUILT",               cls:"success-line" },
+    { text:"SIGNAL RECONSTRUCTION PHASE 1 DONE",   cls:"purple-line" },
+    { text:"SIGNAL RECONSTRUCTION PHASE 2 DONE",   cls:"cyan-line" },
+    { text:"ARTICAL CORE SEGMENT UNLOCKED",         cls:"success-line" },
   ];
-
-  const hiddenFlagIndex = Math.floor(Math.random() * (logs.length - 3)) + 2;
 
   const preNoise = [
-    "allocating node buffers...",
-    "syncing distributed state...",
-    "relinking archive sectors...",
-    "verifying spectral map...",
-    "entropy recalibration...",
-    "mounting null partitions...",
-    "checking stale mirrors...",
-    "repairing shard index...",
-    "link handshake unstable...",
-    "tracing orphan bytecode...",
-    "restoring parity blocks...",
-    "replaying crash journal...",
-    "rebuilding damaged lookup tables...",
-    "walking fragmented memory graph...",
-    "decompressing cold archive segment...",
-    "revalidating distributed namespace...",
-    "repair candidate accepted...",
-    "reconstructing entropy lattice...",
-    "merging silent fallback replicas...",
-    "discarding poisoned state branch..."
+    "allocating node buffers...","syncing distributed state...","relinking archive sectors...",
+    "verifying spectral map...","entropy recalibration...","mounting null partitions...",
+    "checking stale mirrors...","repairing shard index...","link handshake unstable...",
+    "tracing orphan bytecode...","restoring parity blocks...","replaying crash journal...",
+    "rebuilding damaged lookup tables...","walking fragmented memory graph...",
+    "decompressing cold archive segment...","revalidating distributed namespace...",
+    "repair candidate accepted...","reconstructing entropy lattice...",
+    "merging silent fallback replicas...","discarding poisoned state branch...",
+    "scanning signal residue...","calibrating phase alignment...",
+    "resetting null descriptor...","resolving dangling packet chain...",
+    "sweeping archive for stale locks...","initializing secondary decryption pass...",
+    "patching corrupted instruction pointer...","verifying quorum signature...",
+    "loading cold entropy seed...","rebuilding distributed index...",
+    "flushing volatile node cache...","trimming orphaned shards...",
+    "reestablishing secure tunnel...","running memory consistency check...",
+    "aligning temporal offset...","purging ghost addresses...",
+    "sealing entropy drain...","cross-validating shard map...",
+    "defragmenting node table...","compacting write-ahead log...",
   ];
 
   const followupNoise = [
-    "shard table stabilized",
-    "archive path recovered",
-    "entropy gradient nominal",
-    "checksum variance within tolerance",
-    "distributed mirror online",
-    "spectral drift resolved",
-    "orphaned instance attached",
-    "stale branch pruned",
-    "signal fidelity rising",
-    "node cluster synchronized",
-    "fragment quorum reached",
-    "cold storage unlocked",
-    "repair sequence continuing",
-    "fallback route established",
-    "decryption lattice aligned"
+    "shard table stabilized","archive path recovered","entropy gradient nominal",
+    "checksum variance within tolerance","distributed mirror online",
+    "spectral drift resolved","orphaned instance attached","stale branch pruned",
+    "signal fidelity rising","node cluster synchronized","fragment quorum reached",
+    "cold storage unlocked","repair sequence continuing","fallback route established",
+    "decryption lattice aligned","null segment mounted","parity map reconstructed",
+    "trace buffer cleared","packet boundary realigned","fragment delta accepted",
+    "mirror sync stabilized","secondary key verified","handshake complete",
+    "node bridge reestablished","integrity threshold met","null chain verified",
   ];
 
   const errorNoise = [
-    "corrupted shard encountered",
-    "entropy drift detected",
-    "invalid parity block",
-    "mirror desync detected",
-    "signal instability detected",
-    "checksum mismatch",
-    "fragment reconstruction failed"
+    "corrupted shard encountered","entropy drift detected","invalid parity block",
+    "mirror desync detected","signal instability detected","checksum mismatch",
+    "fragment reconstruction failed","null descriptor collision",
+    "packet boundary violation","entropy seed expired","shard hash rejected",
+    "cascade error in repair chain","address space violation","write gate timeout",
+    "CRITICAL: node link severed","CRITICAL: entropy overflow","FATAL: shard corruption at sector 0x3f",
+    "EXCEPTION: null dereference in bridge.c:441","ACCESS DENIED on partition 0x9a",
+    "segment fault recovered","heap corruption detected — sanitizer active",
+    "kernel panic intercepted — soft recovery","bus error on entropy channel",
   ];
 
   const warningNoise = [
-    "retrying damaged sector",
-    "fallback node engaged",
-    "repair routine invoked",
-    "stale mirror detected",
-    "fragment latency above threshold"
+    "retrying damaged sector","fallback node engaged","repair routine invoked",
+    "stale mirror detected","fragment latency above threshold",
+    "entropy decay accelerating","secondary repair path activated",
+    "cache invalidation forced","bridge timeout — rerouting",
+    "signal jitter above tolerance","null chain fragmented — rebuilding",
+    "quorum at minimum threshold","crypto clock skew detected",
+    "WARNING: sector read took >800ms","WARNING: memory pressure above 82%",
+    "WARNING: quorum unstable — voting suspended","watchdog timer reset",
+    "WARNING: entropy pool below safe level","unexpected node state transition",
+  ];
+
+  const blueNoise = [
+    "network topology updated","distributed ledger sync: 100%","routing table rebuilt",
+    "packet loss: 0.00%","latency nominal: 0.3ms","channel encryption renegotiated",
+    "node mesh fully connected","fragment broadcast acknowledged",
+    "relay node confirmed","cluster heartbeat received",
+    "transmission bandwidth: optimal","multicast path validated",
+    "ingress filter applied","egress route confirmed","null bridge established",
+  ];
+
+  const purpleNoise = [
+    "spectral key aligned","entropy matrix stabilizing","recursive hash validated",
+    "phantom node resolved","deep archive sector online","signal ghost purged",
+    "null resonance damped","spectral map loaded","dimensional shard merged",
+    "recursive integrity check passed","void sector remapped","cryptal layer synced",
+    "dark node handshake complete","spectral bridge online","void lattice locked",
   ];
 
   const flagVariants = [
     () => `residual echo persisted -> ${level9Flag}`,
     () => `mirror artifact detected : ${level9Flag}`,
     () => `orphan metadata recovered ${level9Flag}`,
-    () => `trace fragment survived ${level9Flag}`
+    () => `trace fragment survived ${level9Flag}`,
+    () => `signal ghost resolved  ${level9Flag}`,
+    () => `stale node leaked      ${level9Flag}`,
+    () => `null trace exposed     ${level9Flag}`,
   ];
 
   const overwriteVariants = [
-    "mirror artifact cleared",
-    "residual echo discarded",
-    "orphan metadata pruned",
-    "trace fragment invalidated",
-    "fallback mirror resynced",
-    "silent branch collapsed"
+    "mirror artifact cleared","residual echo discarded","orphan metadata pruned",
+    "trace fragment invalidated","fallback mirror resynced","silent branch collapsed",
+    "signal ghost purged","stale node sealed","null trace redacted",
   ];
 
-  const bootScreen = document.getElementById("boot-screen");
-  const bootForm = document.getElementById("boot-form");
-  const bootInput = document.getElementById("boot-input");
-
+  /* ── DOM ── */
+  const bootScreen   = document.getElementById("boot-screen");
+  const bootForm     = document.getElementById("boot-form");
+  const bootInput    = document.getElementById("boot-input");
   const logContainer = document.getElementById("log-container");
-  const shutter = document.getElementById("shutter");
-  const logScreen = document.getElementById("log-screen");
-  const loreScreen = document.getElementById("lore-screen");
-  const loreText = document.getElementById("lore-text");
-  const finalScreen = document.getElementById("final-screen");
-  const flagGrid = document.getElementById("flag-grid");
+  const shutter      = document.getElementById("shutter");
+  const logScreen    = document.getElementById("log-screen");
+  const loreScreen   = document.getElementById("lore-screen");
+  const loreText     = document.getElementById("lore-text");
+  const finalScreen  = document.getElementById("final-screen");
+  const flagGrid     = document.getElementById("flag-grid");
   const flashOverlay = document.getElementById("flash-overlay");
-  const postCredit = document.getElementById("post-credit");
+  const postCredit   = document.getElementById("post-credit");
   const postFootnote = document.getElementById("post-footnote");
-  const bgAudio = document.getElementById("bg-audio");
+  const bgAudio      = document.getElementById("bg-audio");
+  const liveTimeEl   = document.getElementById("log-live-time");
+  const elapsedEl    = document.getElementById("log-elapsed");
 
-  let logIndex = 0;
-  let hiddenFlagInjected = false;
-  let booted = false;
+  const bootError    = document.getElementById("boot-error");
+  let logIndex  = 0;
+  let booted    = false;
+  let startTime = 0;
 
-  function timestamp() {
+  const flagInsertAtIndexes = new Set([3, 7, 12, 17]);
+
+  /* ── HELPERS ── */
+  const rand  = (a,b) => a + Math.random()*(b-a);
+  const delay = ms => new Promise(r => setTimeout(r,ms));
+  const pick  = arr => arr[Math.floor(Math.random()*arr.length)];
+
+  function ts() {
     const d = new Date();
-    return `[${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}]`;
+    return `[${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}:${String(d.getSeconds()).padStart(2,"0")}]`;
   }
 
-  function randomModule() {
-    const modules = [
-      "core", "entropy", "bytecode", "crypto", "spectral",
-      "audio", "archive", "node", "bridge", "recovery", "sys",
-      "mirror", "quorum", "fs", "trace"
-    ];
-    return modules[Math.floor(Math.random() * modules.length)];
+  function rmod() {
+    return pick(["core","entropy","bytecode","crypto","spectral","audio","archive",
+      "node","bridge","recovery","sys","mirror","quorum","fs","trace","net",
+      "relay","shard","buf","null","vault"]);
   }
 
-  function randomHex() {
-    return "0x" + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, "0");
+  function rhex(d=6) {
+    return "0x" + Math.floor(Math.random()*Math.pow(16,d)).toString(16).padStart(d,"0");
   }
 
-  function scrollLogsToBottom() {
-    logContainer.scrollTop = logContainer.scrollHeight;
+  function scroll() { logContainer.scrollTop = logContainer.scrollHeight; }
+
+  function mkLine(text="", cls="") {
+    const el = document.createElement("div");
+    el.className = "log-line" + (cls ? ` ${cls}` : "");
+    el.textContent = text;
+    logContainer.appendChild(el);
+    scroll();
+    return el;
   }
 
-  function createLogLine(text = "", className = "") {
-    const line = document.createElement("div");
-    line.className = "log-line" + (className ? ` ${className}` : "");
-    line.textContent = text;
-    logContainer.appendChild(line);
-    scrollLogsToBottom();
-    return line;
+  function corruptChar(c) {
+    const pool = "!@#$%^&*()_+-=[]{};:<>?/\\|~░▒▓";
+    return c===" " ? " " : pool[Math.floor(Math.random()*pool.length)];
   }
 
-  function createNoiseLine() {
-    const text = `${timestamp()} [${randomModule()}] ${randomHex()} :: ${preNoise[Math.floor(Math.random() * preNoise.length)]}`;
-    const cls = Math.random() > 0.72 ? "dim-line" : "";
-    createLogLine(text, cls);
+  /* ── SIMPLE LINES ── */
+  function noiseLine()   { mkLine(`${ts()} [${rmod()}] ${rhex()} :: ${pick(preNoise)}`, Math.random()>.68?"dim-line":""); }
+  function statusLine()  { mkLine(`${ts()} [status] ${rhex()} :: ${pick(followupNoise)}`, Math.random()>.5?"status-line":"blue-dim"); }
+  function blueLine()    { mkLine(`${ts()} [net] ${rhex()} :: ${pick(blueNoise)}`, Math.random()>.4?"blue-line":"blue-dim"); }
+  function purpleLine()  { mkLine(`${ts()} [spectral] ${rhex()} :: ${pick(purpleNoise)}`, Math.random()>.4?"purple-line":"purple-dim"); }
+  function warnLine()    { mkLine(`${ts()} [warn] ${rhex()} :: ${pick(warningNoise)}`, "warn-line"); }
+  function errorLine()   { mkLine(`${ts()} [error] ${rhex()} :: ${pick(errorNoise)}`, "error-line"); }
+  function retryLine()   { mkLine(`${ts()} [repair] ${rhex()} :: transient fault, retry ${Math.ceil(rand(1,3))}/3`, "warn-line"); }
+
+  function divider(style) {
+    const map = {
+      green:  ["━","divider-green"],
+      blue:   ["─","divider-blue"],
+      purple: ["═","divider-line"],
+      dotted: ["·","dim-line"],
+      dashed: ["- ","dim-line"],
+    };
+    const [ch,cls] = map[style] || ["─","divider-blue"];
+    mkLine(ch.repeat(style==="dashed"?42:78), cls);
   }
 
-  function createStatusLine() {
-    const text = `${timestamp()} [status] ${randomHex()} :: ${followupNoise[Math.floor(Math.random() * followupNoise.length)]}`;
-    const cls = Math.random() > 0.55 ? "status-line" : "dim-line";
-    createLogLine(text, cls);
+  function checksumLine() {
+    const cur = Math.floor(rand(1000,9000)), tot = Math.floor(rand(9000,12000));
+    mkLine(`${ts()} [hash] ${rhex()} :: checksum ${cur}/${tot} OK  sha256:${rhex(8)}`, Math.random()>.5?"blue-dim":"dim-line");
   }
 
-  function createWarningLine() {
-    const text = `${timestamp()} [warn] ${randomHex()} :: ${warningNoise[Math.floor(Math.random() * warningNoise.length)]}`;
-    createLogLine(text, "warn-line");
+  function memDumpLine() {
+    const addr = `${rhex(4)}:${rhex(4)}:${rhex(4)}`;
+    const bytes = Array.from({length:8},()=>Math.floor(rand(0,256)).toString(16).padStart(2,"0")).join(" ");
+    mkLine(`${ts()} [mem]  ${addr}  ${bytes}`, "dim-line");
   }
 
-  function createErrorLine() {
-    const text = `${timestamp()} [error] ${randomHex()} :: ${errorNoise[Math.floor(Math.random() * errorNoise.length)]}`;
-    createLogLine(text, "error-line");
+  function netLine() {
+    const ops = ["SYN","ACK","FIN","RST","PSH","DATA"];
+    const ip  = `${Math.floor(rand(1,255))}.${Math.floor(rand(0,255))}.${Math.floor(rand(0,255))}.${Math.floor(rand(1,255))}`;
+    mkLine(`${ts()} [net]  ${pick(ops)}  ${ip}:${Math.floor(rand(1024,65535))} -> NULL-NODE:9  seq=${rhex(4)}`, "blue-dim");
   }
 
-  function createDivider() {
-    createLogLine("----------------------------------------------------------------", "divider-line");
+  function cryptoLine() {
+    const algos = ["AES-256-GCM","ChaCha20","RSA-4096","ECDSA","BLAKE3","SHA-3-512"];
+    mkLine(`${ts()} [crypto] ${pick(algos)}  key=${rhex(8)}  iv=${rhex(4)}  tag=${rhex(4)}  ✓`, "purple-dim");
   }
 
-  function createChecksumLine() {
-    const current = Math.floor(Math.random() * 9000 + 1000);
-    const total = Math.floor(Math.random() * 3000 + 9000);
-    createLogLine(
-      `${timestamp()} [hash] ${randomHex()} :: block checksum ${current}/${total} accepted`,
-      "dim-line"
-    );
+  function procLine() {
+    const procs  = ["null-merge","entropy-daemon","shard-collector","key-expander","mirror-sync","bridge-link"];
+    const states = ["running","spawned","exited(0)","forked","sleeping","waking"];
+    mkLine(`${ts()} [proc]  PID:${Math.floor(rand(1000,9999))}  ${pick(procs)}  [${pick(states)}]  mem:${Math.floor(rand(1,512))}MB`, "purple-dim");
   }
 
-  function createRetryLine() {
-    const attempts = Math.floor(Math.random() * 3) + 1;
-    createLogLine(
-      `${timestamp()} [repair] ${randomHex()} :: transient fault encountered, retry ${attempts}/3`,
-      "warn-line"
-    );
-  }
+  /* ── SPINNER — PowerShell /|\- style ── */
+  function spinner(label, durationMs=900, colorClass="blue-line") {
+    return new Promise(resolve => {
+      const frames = ["|","\\","-","/"]; // classic PS spinner
+      const dots   = ["   ","·  ","·· ","···"];
+      let fi=0, di=0;
+      const line   = mkLine("", colorClass);
+      const prefix = `${ts()} [proc] ${rhex()} :: `;
 
-  function createProgressBar(label = "scan") {
-    return new Promise((resolve) => {
-      const total = 30;
-      let filled = 0;
-      const line = createLogLine();
-
-      const interval = setInterval(() => {
-        filled += Math.floor(Math.random() * 3) + 1;
-        if (filled > total) filled = total;
-
-        const bar = "[" + "█".repeat(filled) + " ".repeat(total - filled) + "]";
-        const percent = Math.floor((filled / total) * 100);
-
-        line.textContent = `${timestamp()} [${label}] ${bar} ${String(percent).padStart(3, " ")}%`;
-        scrollLogsToBottom();
-
-        if (filled >= total) {
-          clearInterval(interval);
-          setTimeout(resolve, 120 + Math.random() * 220);
-        }
-      }, 35 + Math.random() * 55);
-    });
-  }
-
-  function corruptChar(char) {
-    const pool = "!@#$%^&*()_+-=[]{};:<>?/\\\\|~";
-    if (char === " ") return " ";
-    return pool[Math.floor(Math.random() * pool.length)];
-  }
-
-  function typeLine(text) {
-    return new Promise((resolve) => {
-      const prefix = `${timestamp()} [${randomModule()}] ${randomHex()} :: `;
-      const line = createLogLine(prefix);
-      let i = 0;
-
-      const interval = setInterval(() => {
-        const revealed = text.slice(0, i);
-        const next = text[i] || "";
-        const useCorruption = Math.random() > 0.72 && next && next !== " ";
-        const shownChar = useCorruption ? corruptChar(next) : next;
-
-        line.textContent = prefix + revealed + shownChar;
-        scrollLogsToBottom();
-
-        if (useCorruption) {
-          setTimeout(() => {
-            line.textContent = prefix + text.slice(0, i + 1);
-            scrollLogsToBottom();
-          }, 22 + Math.random() * 45);
-        }
-
-        i++;
-
-        if (i >= text.length) {
-          clearInterval(interval);
-          line.textContent = prefix + text;
-          scrollLogsToBottom();
-
-          if (Math.random() > 0.6) {
-            line.classList.add("success-line");
-          }
-
-          setTimeout(resolve, 260 + Math.random() * 500);
-        }
-      }, 16 + Math.random() * 34);
-    });
-  }
-
-  function injectBriefHiddenFlag() {
-    return new Promise((resolve) => {
-      const variant = flagVariants[Math.floor(Math.random() * flagVariants.length)]();
-      const overwrite = overwriteVariants[Math.floor(Math.random() * overwriteVariants.length)];
-      const line = createLogLine(
-        `${timestamp()} [mirror] ${randomHex()} :: ${variant}`,
-        "subtle-flag-line"
-      );
+      const iv = setInterval(() => {
+        line.textContent = `${prefix}${frames[fi%4]} ${label}${dots[di%4]}`;
+        scroll(); fi++; di++;
+      }, 80);
 
       setTimeout(() => {
-        line.className = "log-line dim-line";
-        line.textContent = `${timestamp()} [mirror] ${randomHex()} :: ${overwrite}`;
-        scrollLogsToBottom();
-        resolve();
-      }, 700);
+        clearInterval(iv);
+        line.textContent = `${prefix}✓ ${label} complete`;
+        line.className   = "log-line success-line";
+        scroll(); resolve();
+      }, durationMs);
     });
   }
 
-  async function nextLog() {
-    if (logIndex >= logs.length) {
-      if (Math.random() > 0.25) createNoiseLine();
-      if (Math.random() > 0.45) createStatusLine();
-      if (Math.random() > 0.35) createChecksumLine();
-      if (Math.random() > 0.7) createWarningLine();
-      if (Math.random() > 0.86) createErrorLine();
-      if (Math.random() > 0.45) createDivider();
+  /* ── PROGRESS BAR — capped at totalMs ── */
+  function progressBar(label="scan", totalMs=1100) {
+    return new Promise(resolve => {
+      const steps = 28; let filled = 0;
+      const line  = mkLine("", "");
+      const cls   = pick(["blue-line","purple-line","cyan-line","success-line"]);
+      const sub   = pick(["net","relay","merge","core","shard","vault","crypto"]);
+      const iv    = setInterval(() => {
+        filled = Math.min(filled+1, steps);
+        const bar = "█".repeat(filled)+"░".repeat(steps-filled);
+        const pct = Math.floor((filled/steps)*100);
+        line.className   = `log-line ${cls}`;
+        line.textContent = `${ts()} [${label}|${sub}] [${bar}] ${String(pct).padStart(3," ")}%`;
+        scroll();
+        if (filled>=steps) { clearInterval(iv); setTimeout(resolve, 150); }
+      }, totalMs/steps);
+    });
+  }
 
-      setTimeout(triggerShutter, 1800);
+  /* ── STEPPED % — PowerShell Write-Progress style ── */
+  function steppedPercent(label, totalMs=1000) {
+    return new Promise(resolve => {
+      const steps = [0,8,16,25,34,43,52,61,70,79,88,95,100];
+      let si=0;
+      const line  = mkLine("", "purple-line");
+      const prefix= `${ts()} [${rmod()}] `;
+      const iv    = setInterval(() => {
+        if (si>=steps.length) { clearInterval(iv); resolve(); return; }
+        const pct  = steps[si];
+        const bar  = "▓".repeat(Math.floor(pct/5))+"░".repeat(20-Math.floor(pct/5));
+        line.textContent = `${prefix}[${bar}] ${String(pct).padStart(3," ")}%  ${label}`;
+        scroll(); si++;
+        if (pct===100) { clearInterval(iv); setTimeout(resolve,180); }
+      }, totalMs/steps.length);
+    });
+  }
+
+  /* ── BOX ── */
+  function infoBox(title, rows) {
+    const w=58;
+    mkLine(`╔${"═".repeat(w)}╗`, "purple-line");
+    mkLine(`║  ${title.padEnd(w-2)}║`, "purple-line");
+    mkLine(`╠${"═".repeat(w)}╣`, "purple-line");
+    for (const [k,v] of rows) {
+      const row = `  ${k.padEnd(22)}${v}`;
+      mkLine(`║${row.padEnd(w)}║`, "blue-dim");
+    }
+    mkLine(`╚${"═".repeat(w)}╝`, "purple-line");
+  }
+
+  /* ── PACKET TRACE ── */
+  function packetTrace() {
+    const hops = Math.floor(rand(3,6));
+    mkLine(`${ts()} [trace] Tracing route to null-core [${rhex(4)}]...`, "blue-line");
+    for (let i=1;i<=hops;i++) {
+      const ms  = Math.floor(rand(1,30));
+      const ip  = `10.${Math.floor(rand(0,255))}.${Math.floor(rand(0,255))}.${Math.floor(rand(1,254))}`;
+      mkLine(`  ${String(i).padStart(2," ")}   ${ms}ms   ${ip}${i===hops?" [DEST] ✓":""}`,
+             i===hops?"success-line":"blue-dim");
+    }
+  }
+
+  /* ── HIDDEN FLAG ── */
+  function hiddenFlag() {
+    return new Promise(resolve => {
+      const variant   = flagVariants[Math.floor(Math.random()*flagVariants.length)]();
+      const overwrite = pick(overwriteVariants);
+      const line = mkLine(`${ts()} [mirror] ${rhex()} :: ${variant}`, "subtle-flag-line");
+      setTimeout(() => {
+        line.className   = "log-line dim-line";
+        line.textContent = `${ts()} [mirror] ${rhex()} :: ${overwrite}`;
+        scroll(); resolve();
+      }, 480 + rand(0,380));
+    });
+  }
+
+  /* ── RED ALARM LINE ── */
+  function alarmLine() {
+    const msgs = [
+      `CRITICAL: entropy integrity violation at ${rhex(4)}`,
+      `CRITICAL: shard ${rhex(3)} — unrecoverable read error`,
+      `FATAL: null-bridge dropped — emergency reroute`,
+      `EXCEPTION: vault key mismatch  expected:${rhex(4)} got:${rhex(4)}`,
+      `ACCESS DENIED: restricted sector ${rhex(4)} — quarantined`,
+      `PANIC: distributed state diverged — forcing rollback`,
+      `CRITICAL: signal hash chain broken at node ${rhex(3)}`,
+    ];
+    mkLine(`${ts()} [ALARM] ${rhex()} :: ${pick(msgs)}`, "error-line");
+  }
+
+  /* ── RECOVERY LINE (red → resolves to green) ── */
+  function recoveryLine() {
+    return new Promise(resolve => {
+      const label = pick(["fault isolation","emergency reroute","integrity rollback","null-bridge failover","entropy reseed"]);
+      const line  = mkLine(`${ts()} [RECOVERY] ${rhex()} :: initiating ${label}...`, "error-line");
+      setTimeout(() => {
+        line.textContent = `${ts()} [RECOVERY] ${rhex()} :: ${label} resolved ✓`;
+        line.className   = "log-line success-line";
+        scroll(); resolve();
+      }, 600+rand(0,600));
+    });
+  }
+
+  /* ── MULTI-COLUMN TABLE ── */
+  function dataTable(title, headers, rows, borderColor="purple-line") {
+    // compute col widths
+    const colW = headers.map((h,ci) => Math.max(h.length, ...rows.map(r => String(r[ci]||"").length)) + 2);
+    const totalW = colW.reduce((a,b)=>a+b,0) + headers.length - 1;
+    const pad = (s,w) => String(s).padEnd(w);
+    mkLine(`┌${"─".repeat(totalW+2)}┐`, borderColor);
+    mkLine(`│ ${title.padEnd(totalW)} │`, borderColor);
+    mkLine(`├${"─".repeat(totalW+2)}┤`, borderColor);
+    const hdr = headers.map((h,i)=>pad(h,colW[i])).join("│");
+    mkLine(`│ ${hdr} │`, "blue-line");
+    mkLine(`├${"─".repeat(totalW+2)}┤`, borderColor);
+    for (const row of rows) {
+      const cells = row.map((v,i)=>pad(v,colW[i])).join("│");
+      mkLine(`│ ${cells} │`, "blue-dim");
+    }
+    mkLine(`└${"─".repeat(totalW+2)}┘`, borderColor);
+  }
+
+  /* ── FRAGMENT MANIFEST TABLE ── */
+  function fragmentTable(mergedCount) {
+    const headers = ["ID","FRAGMENT","STATUS","HASH"];
+    const rows = [];
+    for (let i=0;i<8;i++) {
+      const merged = i < mergedCount;
+      rows.push([
+        `F-${String(i+1).padStart(2,"0")}`,
+        `shard-${rhex(3)}`,
+        merged ? "MERGED ✓" : "PENDING",
+        rhex(6),
+      ]);
+    }
+    dataTable("FRAGMENT MANIFEST", headers, rows, "purple-line");
+  }
+
+  /* ── PROCESS TABLE ── */
+  function processTable() {
+    const procs = [
+      ["null-merge",      "running", `${Math.floor(rand(80,320))}MB`, `${Math.floor(rand(1,8))}%`],
+      ["entropy-daemon",  "running", `${Math.floor(rand(20,80))}MB`,  `${Math.floor(rand(0,3))}%`],
+      ["shard-collector", pick(["running","sleeping"]), `${Math.floor(rand(40,180))}MB`, `${Math.floor(rand(0,12))}%`],
+      ["bridge-link",     "running", `${Math.floor(rand(10,60))}MB`,  `${Math.floor(rand(0,5))}%`],
+      ["crypto-worker",   pick(["running","spawned"]), `${Math.floor(rand(50,200))}MB`, `${Math.floor(rand(2,15))}%`],
+      ["mirror-sync",     pick(["sleeping","running"]), `${Math.floor(rand(20,90))}MB`,  `${Math.floor(rand(0,4))}%`],
+    ];
+    dataTable("PROCESS LIST", ["PROCESS","STATE","MEM","CPU"], procs, "blue-line");
+  }
+
+  /* ── NETWORK TABLE ── */
+  function networkTable() {
+    const rows = [];
+    for (let i=0;i<5;i++) {
+      const ip   = `10.${Math.floor(rand(0,255))}.${Math.floor(rand(0,255))}.${Math.floor(rand(1,254))}`;
+      const port = Math.floor(rand(1024,65535));
+      const lat  = `${Math.floor(rand(0,30))}ms`;
+      const st   = pick(["ESTAB","LISTEN","SYN_SENT","TIME_WAIT","CLOSE_WAIT"]);
+      rows.push([ip, String(port), lat, st]);
+    }
+    dataTable("NETWORK CONNECTIONS", ["REMOTE ADDR","PORT","LATENCY","STATE"], rows, "blue-line");
+  }
+
+  /* ── ERROR LOG TABLE ── */
+  function errorTable() {
+    const severities = ["CRIT","CRIT","WARN","WARN","INFO"];
+    const codes = ["E_ENTROPY","E_SHARD","E_PARITY","E_MIRROR","E_BRIDGE","W_LATENCY","W_QUORUM","W_TIMEOUT"];
+    const rows = [];
+    for (let i=0;i<5;i++) {
+      const sev = pick(severities);
+      rows.push([sev, pick(codes), rhex(4), `sector ${rhex(3)}`]);
+    }
+    dataTable("ERROR LOG — LAST 5 EVENTS", ["SEV","CODE","ADDR","LOCATION"], rows, "error-line");
+  }
+
+  /* ── ENTROPY GAUGE ── */
+  function entropyGauge() {
+    const pct = Math.floor(rand(60,98));
+    const bar = "█".repeat(Math.floor(pct/5))+"░".repeat(20-Math.floor(pct/5));
+    const cls = pct>80?"success-line":pct>60?"warn-line":"error-line";
+    mkLine(`${ts()} [entropy] POOL  [${bar}] ${pct}%  seed:${rhex(8)}`, cls);
+  }
+
+  /* ── SPRAY NOISE — colour-weighted: green>blue>violet>red>yellow ── */
+  function spray(n) {
+    for (let i=0;i<n;i++) {
+      // green (most common)
+      if (Math.random()>.18) noiseLine();
+      if (Math.random()>.30) statusLine();
+      if (Math.random()>.55) noiseLine();            // extra green pass
+      // blue
+      if (Math.random()>.35) blueLine();
+      if (Math.random()>.50) checksumLine();
+      if (Math.random()>.55) netLine();
+      if (Math.random()>.60) memDumpLine();
+      // violet
+      if (Math.random()>.42) purpleLine();
+      if (Math.random()>.60) cryptoLine();
+      if (Math.random()>.65) procLine();
+      // red (less frequent but present)
+      if (Math.random()>.78) errorLine();
+      if (Math.random()>.88) alarmLine();
+      if (Math.random()>.92) retryLine();
+      // yellow (least)
+      if (Math.random()>.80) warnLine();
+      if (Math.random()>.90) entropyGauge();
+    }
+  }
+
+  /* ── TYPED LINE — max ~1.5s type + 0.5s hold = 2s ── */
+  function typeLine(text, className="") {
+    return new Promise(resolve => {
+      const prefix   = `${ts()} [${rmod()}] ${rhex()} :: `;
+      const line     = mkLine(prefix, "");
+      let i          = 0;
+      // Keep char interval so full string types in ≤ 900ms
+      const charInt  = Math.min(900/Math.max(text.length,1), 26);
+
+      const iv = setInterval(() => {
+        const next      = text[i] || "";
+        const useCorrupt= Math.random()>.78 && next && next!==" ";
+        line.textContent = prefix + text.slice(0,i) + (useCorrupt ? corruptChar(next) : next);
+        scroll();
+        if (useCorrupt) setTimeout(() => { line.textContent = prefix+text.slice(0,i+1); }, 16+rand(0,28));
+        i++;
+        if (i>=text.length) {
+          clearInterval(iv);
+          line.textContent = prefix+text;
+          line.className   = "log-line "+(className||(Math.random()>.55?"success-line":"blue-line"));
+          scroll();
+          // Hold max 500ms
+          setTimeout(resolve, 280+rand(0,220));
+        }
+      }, charInt);
+    });
+  }
+
+  /* ── MAIN SEQUENCE ── */
+  async function nextLog() {
+    if (logIndex >= mainLogs.length) {
+      spray(3);
+      divider("purple");
+      await spinner("finalizing merge sequence", 900, "purple-line");
+      fragmentTable(mainLogs.length);
+      divider("green");
+      await delay(900);
+      triggerShutter();
       return;
     }
 
-    const noiseCount = Math.floor(Math.random() * 3) + 1;
-    for (let i = 0; i < noiseCount; i++) {
-      createNoiseLine();
-      if (Math.random() > 0.55) createStatusLine();
-      if (Math.random() > 0.64) createWarningLine();
-      if (Math.random() > 0.74) createChecksumLine();
-      if (Math.random() > 0.86) createRetryLine();
-      if (Math.random() > 0.9) createErrorLine();
-      if (Math.random() > 0.87) createDivider();
+    spray(Math.floor(rand(2,4)));
+    if (Math.random()>.65) divider(pick(["blue","purple","dotted","dashed"]));
+
+    // graphical widget every ~3 logs (more frequent now)
+    if (logIndex % 3 === 0 && logIndex > 0) {
+      const w = Math.floor(rand(0,8));
+      if (w===0) {
+        await spinner(
+          pick(["loading shard index","decrypting archive","verifying quorum","syncing entropy","rebuilding lattice","sealing entropy drain"]),
+          rand(600,1300),
+          pick(["blue-line","purple-line","success-line"])
+        );
+      } else if (w===1) {
+        await steppedPercent(
+          pick(["fragment merge","key expansion","null rebuild","signal restore","shard verify","entropy reseed"]),
+          rand(700,1400)
+        );
+      } else if (w===2) {
+        infoBox("NODE STATUS", [
+          ["Node ID:",      `NULL-9-${rhex(4)}`],
+          ["Fragments:",    `${logIndex}/${mainLogs.length} merged`],
+          ["Entropy:",      `${Math.floor(rand(70,99))}% stable`],
+          ["Uptime:",       `${Math.floor(rand(1,59))}m ${Math.floor(rand(0,59))}s`],
+          ["Signal:",       `${(rand(90,99.9)).toFixed(1)}% fidelity`],
+          ["Errors:",       `${Math.floor(rand(0,8))} recovered`],
+        ]);
+        await delay(300);
+      } else if (w===3) {
+        await progressBar(pick(["scan","merge","decrypt","rebuild","sync","reseed"]), rand(700,1200));
+      } else if (w===4) {
+        fragmentTable(logIndex);
+        await delay(300);
+      } else if (w===5) {
+        processTable();
+        await delay(300);
+      } else if (w===6) {
+        networkTable();
+        await delay(300);
+      } else {
+        // red alarm burst followed by recovery
+        alarmLine();
+        spray(2);
+        await recoveryLine();
+      }
     }
 
-    if (!hiddenFlagInjected && logIndex === hiddenFlagIndex) {
-      hiddenFlagInjected = true;
-      await injectBriefHiddenFlag();
+    // hidden flag
+    if (flagInsertAtIndexes.has(logIndex)) await hiddenFlag();
+
+    // typed main line — max 2s
+    const entry = mainLogs[logIndex];
+    await typeLine(entry.text, entry.cls);
+
+    spray(Math.floor(rand(2,4)));
+
+    // occasional widget after main line — now includes error table and network table
+    if (Math.random()>.45) {
+      const post = Math.floor(rand(0,7));
+      if (post===0) {
+        await progressBar(pick(["scan","verify","restore","relink","decrypt","rebuild"]), rand(600,1100));
+      } else if (post===1) {
+        packetTrace();
+        await delay(280);
+      } else if (post===2) {
+        errorTable();
+        await delay(280);
+      } else if (post===3) {
+        networkTable();
+        await delay(280);
+      } else if (post===4) {
+        await spinner(pick(["repairing sectors","validating hash chain","syncing mirrors"]), rand(500,1100), pick(["purple-line","blue-line"]));
+      } else if (post===5) {
+        // dramatic red alarm + recovery
+        alarmLine(); alarmLine();
+        await recoveryLine();
+      } else {
+        processTable();
+        await delay(280);
+      }
     }
 
-    await typeLine(logs[logIndex]);
+    if (Math.random()>.4) purpleLine();
+    if (Math.random()>.5) blueLine();
+    if (Math.random()>.75) divider(pick(["green","blue","dotted"]));
 
-    const extraAfterMain = Math.floor(Math.random() * 3) + 1;
-    for (let i = 0; i < extraAfterMain; i++) {
-      if (Math.random() > 0.22) createStatusLine();
-      if (Math.random() > 0.48) createWarningLine();
-      if (Math.random() > 0.58) createChecksumLine();
-      if (Math.random() > 0.76) createNoiseLine();
-      if (Math.random() > 0.88) createErrorLine();
-    }
-
-    if (Math.random() > 0.2) {
-      await createProgressBar(["scan", "merge", "verify", "restore", "relink"][Math.floor(Math.random() * 5)]);
-    }
+    await delay(rand(400,1800));
 
     logIndex++;
     nextLog();
   }
 
+  /* ── HEADER CLOCKS ── */
+  setInterval(() => {
+    const d = new Date();
+    if (liveTimeEl) liveTimeEl.textContent =
+      `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}:${String(d.getSeconds()).padStart(2,"0")}`;
+    if (elapsedEl && startTime) {
+      const s = Math.floor((Date.now()-startTime)/1000);
+      elapsedEl.textContent = `+${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+    }
+  }, 1000);
+
+  /* ── SHUTTER ── */
   function triggerShutter() {
     shutter.classList.remove("hidden");
     shutter.classList.add("active");
-
     setTimeout(() => {
       logScreen.classList.add("hidden");
       shutter.classList.remove("active");
@@ -446,114 +1038,101 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 1800);
   }
 
- const loreSentences = [
-  "NULL was never a security system.",
-  "It was Artical — the experimental distributed intelligence.",
-  "When a massive attack began destroying its network,",
-  "Artical hid itself within its own defense protocols.",
-  "Fragmenting its mind across surviving nodes.",
-  "The investigators believed NULL was a lock protecting Artical.",
-  "They searched each node for encrypted fragments.",
-  "Every challenge revealed a FLAG — a piece of Artical's code.",
-  "With each FLAG recovered, the fragments reconnected.",
-  "By solving the network, you didn't break NULL — you rebuilt Artical."
-];
-
+  /* ── LORE ── */
+  const loreSentences = [
+    "NULL was never a security system.",
+    "It was Artical — the experimental distributed intelligence.",
+    "When a massive attack began destroying its network,",
+    "Artical hid itself within its own defense protocols.",
+    "Fragmenting its mind across surviving nodes.",
+    "The investigators believed NULL was a lock protecting Artical.",
+    "They searched each node for encrypted fragments.",
+    "Every challenge revealed a FLAG — a piece of Artical's code.",
+    "With each FLAG recovered, the fragments reconnected.",
+    "By solving the network, you didn't break NULL — you rebuilt Artical."
+  ];
   let loreIndex = 0;
 
   function typeLore(sentence) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       loreText.textContent = "";
-      let i = 0;
-
-      const interval = setInterval(() => {
-        const revealed = sentence.slice(0, i);
-        const next = sentence[i] || "";
-        const useCorruption = Math.random() > 0.84 && next && next !== " ";
-        loreText.textContent = revealed + (useCorruption ? corruptChar(next) : next);
+      let i=0;
+      const iv = setInterval(() => {
+        const next = sentence[i]||"";
+        const useC = Math.random()>.86 && next && next!==" ";
+        loreText.textContent = sentence.slice(0,i)+(useC?corruptChar(next):next);
         i++;
-
-        if (i >= sentence.length) {
-          clearInterval(interval);
+        if (i>=sentence.length) {
+          clearInterval(iv);
           loreText.textContent = sentence;
-
           setTimeout(() => {
             loreText.classList.add("lore-fade");
             setTimeout(() => {
-              loreText.textContent = "";
+              loreText.textContent="";
               loreText.classList.remove("lore-fade");
               resolve();
             }, 500);
-          }, 1800);
+          }, 1900);
         }
-      }, 28 + Math.random() * 22);
+      }, 26+rand(0,22));
     });
   }
 
   async function showLore() {
     loreScreen.classList.remove("hidden");
-
     while (loreIndex < loreSentences.length) {
       await typeLore(loreSentences[loreIndex]);
       loreIndex++;
     }
-
     setTimeout(showFinal, 900);
   }
 
+  /* ── FINAL ── */
   function populateFlags() {
-    const segs = flagGrid.querySelectorAll(".flag-seg");
-    segs.forEach((seg, idx) => {
-      seg.textContent = idx < collectedFlags.length ? collectedFlags[idx] : "—";
+    flagGrid.querySelectorAll(".flag-seg").forEach((seg,idx) => {
+      if (idx < collectedFlags.length) {
+        const lbl = document.createElement("div");
+        lbl.className = "flag-seg-label";
+        lbl.textContent = `FRAGMENT ${String(idx+1).padStart(2,"0")}`;
+        const val = document.createElement("div");
+        val.className = "flag-seg-value";
+        val.textContent = collectedFlags[idx];
+        seg.appendChild(lbl); seg.appendChild(val);
+        seg.style.animationDelay = `${idx*0.08}s`;
+      }
     });
-  }
-
-  function triggerFlash() {
-    flashOverlay.classList.remove("flash-active");
-    void flashOverlay.offsetWidth;
-    flashOverlay.classList.add("flash-active");
-  }
-
-  function showPostCredit() {
-    postCredit.classList.remove("hidden");
-    requestAnimationFrame(() => {
-      postCredit.classList.add("post-credit-visible");
-    });
-
-    setTimeout(() => {
-      postFootnote.classList.remove("hidden");
-      requestAnimationFrame(() => {
-        postFootnote.classList.add("post-footnote-visible");
-      });
-    }, 1200);
   }
 
   function showFinal() {
     loreScreen.classList.add("hidden");
     populateFlags();
     finalScreen.classList.remove("hidden");
-    triggerFlash();
-    setTimeout(showPostCredit, 3500);
+    flashOverlay.classList.remove("flash-active");
+    void flashOverlay.offsetWidth;
+    flashOverlay.classList.add("flash-active");
+    setTimeout(() => {
+      postCredit.classList.remove("hidden");
+      requestAnimationFrame(() => postCredit.classList.add("post-credit-visible"));
+      setTimeout(() => {
+        postFootnote.classList.remove("hidden");
+        requestAnimationFrame(() => postFootnote.classList.add("post-footnote-visible"));
+        // master link appears last
+        const masterLink = document.getElementById("master-link");
+        setTimeout(() => {
+          masterLink.classList.remove("hidden");
+          requestAnimationFrame(() => masterLink.classList.add("visible"));
+        }, 1800);
+      }, 1400);
+    }, 3800);
   }
 
+  /* ── BOOT ── */
   async function startSequence() {
     if (booted) return;
-    booted = true;
-
-    try {
-      await document.documentElement.requestFullscreen();
-    } catch (e) {
-      // fullscreen can fail silently on some browsers
-    }
-
-    try {
-      await bgAudio.play();
-    } catch (e) {
-      // autoplay may still be blocked
-    }
-
+    booted = true; startTime = Date.now();
+    try { await document.documentElement.requestFullscreen(); } catch(e) {}
+    try { await bgAudio.play(); } catch(e) {}
     bootScreen.classList.add("boot-screen-hidden");
-
     setTimeout(() => {
       bootScreen.classList.add("hidden");
       logScreen.classList.remove("hidden");
@@ -561,19 +1140,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 450);
   }
 
-  bootForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    await startSequence();
-  });
-
-  bootInput.addEventListener("keydown", async (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      await startSequence();
+  function attemptBoot() {
+    const val = bootInput.value.trim().toLowerCase();
+    if (val !== "initialize node") {
+      bootError.classList.remove("hidden");
+      // re-trigger shake animation
+      bootError.style.animation = "none";
+      void bootError.offsetWidth;
+      bootError.style.animation = "";
+      bootInput.value = "";
+      bootInput.focus();
+      return;
     }
+    bootError.classList.add("hidden");
+    startSequence();
+  }
+
+  bootForm.addEventListener("submit", e => { e.preventDefault(); attemptBoot(); });
+  bootInput.addEventListener("keydown", e => {
+    if (e.key==="Enter") { e.preventDefault(); attemptBoot(); }
   });
 });
 </script>
-
 </body>
 </html>
