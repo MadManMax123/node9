@@ -1087,6 +1087,8 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(showFinal, 900);
   }
 
+  const STORAGE_KEY = "null9_cutscene_complete";
+
   /* ── FINAL ── */
   function populateFlags() {
     flagGrid.querySelectorAll(".flag-seg").forEach((seg,idx) => {
@@ -1103,27 +1105,40 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function showFinal() {
+  function showFinal(skipFlash = false) {
+    // persist completion
+    try { localStorage.setItem(STORAGE_KEY, "1"); } catch(e) {}
+
     loreScreen.classList.add("hidden");
     populateFlags();
     finalScreen.classList.remove("hidden");
-    flashOverlay.classList.remove("flash-active");
-    void flashOverlay.offsetWidth;
-    flashOverlay.classList.add("flash-active");
+
+    if (!skipFlash) {
+      flashOverlay.classList.remove("flash-active");
+      void flashOverlay.offsetWidth;
+      flashOverlay.classList.add("flash-active");
+    }
+
+    // all post-final elements appear immediately if returning user, otherwise staggered
+    const delay0 = skipFlash ? 0   : 3800;
+    const delay1 = skipFlash ? 200 : 5200;  // +1400
+    const delay2 = skipFlash ? 900 : 7000;  // +1800
+
     setTimeout(() => {
       postCredit.classList.remove("hidden");
       requestAnimationFrame(() => postCredit.classList.add("post-credit-visible"));
-      setTimeout(() => {
-        postFootnote.classList.remove("hidden");
-        requestAnimationFrame(() => postFootnote.classList.add("post-footnote-visible"));
-        // master link appears last
-        const masterLink = document.getElementById("master-link");
-        setTimeout(() => {
-          masterLink.classList.remove("hidden");
-          requestAnimationFrame(() => masterLink.classList.add("visible"));
-        }, 1800);
-      }, 1400);
-    }, 3800);
+    }, delay0);
+
+    setTimeout(() => {
+      postFootnote.classList.remove("hidden");
+      requestAnimationFrame(() => postFootnote.classList.add("post-footnote-visible"));
+    }, delay1);
+
+    setTimeout(() => {
+      const masterLink = document.getElementById("master-link");
+      masterLink.classList.remove("hidden");
+      requestAnimationFrame(() => masterLink.classList.add("visible"));
+    }, delay2);
   }
 
   /* ── BOOT ── */
@@ -1140,11 +1155,42 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 450);
   }
 
+  /* ── RETURNING USER: skip straight to final ── */
+  function skipToFinal() {
+    try { document.documentElement.requestFullscreen(); } catch(e) {}
+    try { bgAudio.play(); } catch(e) {}
+    bootScreen.classList.add("boot-screen-hidden");
+    setTimeout(() => {
+      bootScreen.classList.add("hidden");
+      showFinal(true);
+    }, 350);
+  }
+
+  // Check on load — if already completed, show a "replay / skip" option
+  const alreadyDone = (() => { try { return localStorage.getItem(STORAGE_KEY) === "1"; } catch(e) { return false; } })();
+
+  if (alreadyDone) {
+    // Add a "skip" button to the boot box
+    const skipBtn = document.createElement("button");
+    skipBtn.type = "button";
+    skipBtn.className = "boot-btn";
+    skipBtn.style.cssText = "margin-top:10px;min-width:100%;border-color:rgba(0,255,153,0.35);color:rgba(0,255,153,0.6);font-size:.76rem;letter-spacing:.1em;";
+    skipBtn.textContent = "▶  SKIP — SHOW FLAGS";
+    skipBtn.addEventListener("click", skipToFinal);
+    document.querySelector(".boot-box").appendChild(skipBtn);
+
+    // Also show a small notice above the input
+    const notice = document.createElement("div");
+    notice.style.cssText = "margin-bottom:10px;font-size:.7rem;letter-spacing:.08em;color:rgba(0,255,153,.4);";
+    notice.textContent = "// CUTSCENE ALREADY COMPLETED — skip or replay below";
+    const bootForm = document.getElementById("boot-form");
+    bootForm.parentNode.insertBefore(notice, bootForm);
+  }
+
   function attemptBoot() {
     const val = bootInput.value.trim().toLowerCase();
     if (val !== "initialize node") {
       bootError.classList.remove("hidden");
-      // re-trigger shake animation
       bootError.style.animation = "none";
       void bootError.offsetWidth;
       bootError.style.animation = "";
