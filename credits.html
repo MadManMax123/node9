@@ -10,7 +10,6 @@
   :root {
     --green: #00ff88;
     --green-dim: #00aa55;
-    --green-faint: rgba(0,255,136,0.06);
     --green-glow: rgba(0,255,136,0.35);
     --bg: #020b06;
     --text: #a8ffcc;
@@ -29,7 +28,7 @@
     width: 100%;
   }
 
-  /* Scanlines */
+  /* scanlines */
   body::before {
     content: '';
     position: fixed; inset: 0; z-index: 900;
@@ -40,7 +39,7 @@
     pointer-events: none;
   }
 
-  /* Vignette */
+  /* vignette */
   body::after {
     content: '';
     position: fixed; inset: 0; z-index: 899;
@@ -48,20 +47,16 @@
     pointer-events: none;
   }
 
-  /* Starfield / noise bg */
   .pulse-bg {
     position: fixed; inset: 0; z-index: 0;
     background:
       radial-gradient(ellipse at 50% 100%, rgba(0,255,136,0.06) 0%, transparent 60%),
-      radial-gradient(ellipse at 50% 50%, rgba(0,255,136,0.03) 0%, transparent 80%);
+      radial-gradient(ellipse at 50% 50%,  rgba(0,255,136,0.03) 0%, transparent 80%);
     animation: pulse-bg 5s ease-in-out infinite;
   }
-  @keyframes pulse-bg {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 1; }
-  }
+  @keyframes pulse-bg { 0%,100%{opacity:.6} 50%{opacity:1} }
 
-  /* ─── ENTRY SCREEN ─── */
+  /* ── ENTRY SCREEN ── */
   #entry-screen {
     position: fixed; inset: 0; z-index: 500;
     display: flex; flex-direction: column;
@@ -70,11 +65,7 @@
     background: var(--bg);
     transition: opacity 1.5s ease;
   }
-
-  #entry-screen.fade-out {
-    opacity: 0;
-    pointer-events: none;
-  }
+  #entry-screen.fade-out { opacity: 0; pointer-events: none; }
 
   .entry-title {
     font-family: 'VT323', monospace;
@@ -85,230 +76,157 @@
     opacity: 0;
     animation: fade-up 1s ease forwards 0.5s;
   }
-
   .entry-sub {
-    font-size: 12px;
-    letter-spacing: 0.3em;
-    color: var(--text-dim);
-    opacity: 0;
-    animation: fade-up 0.8s ease forwards 1.2s;
+    font-size: 12px; letter-spacing: 0.3em; color: var(--text-dim);
+    opacity: 0; animation: fade-up 0.8s ease forwards 1.2s;
   }
-
   .entry-divider {
-    width: 160px;
-    height: 1px;
+    width: 160px; height: 1px;
     background: linear-gradient(90deg, transparent, var(--green-dim), transparent);
-    margin: 8px 0;
-    opacity: 0;
-    animation: fade-up 0.6s ease forwards 1.6s;
+    margin: 8px 0; opacity: 0; animation: fade-up 0.6s ease forwards 1.6s;
   }
-
   .entry-prompt {
-    font-family: 'VT323', monospace;
-    font-size: 20px;
-    color: var(--text-dim);
-    letter-spacing: 0.15em;
+    font-family: 'VT323', monospace; font-size: 20px;
+    color: var(--text-dim); letter-spacing: 0.15em;
     opacity: 0;
-    animation: fade-up 0.6s ease forwards 2.4s, blink-prompt 1.4s step-end infinite 3s;
+    animation: fade-up 0.6s ease forwards 2.4s, blink-prompt 1.4s step-end infinite 3.2s;
   }
+  @keyframes fade-up { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes blink-prompt { 0%,100%{opacity:.7} 50%{opacity:.2} }
 
-  @keyframes fade-up {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes blink-prompt {
-    0%, 100% { opacity: 0.7; }
-    50% { opacity: 0.2; }
-  }
-
-  /* ─── SCROLL STAGE ─── */
+  /* ── SCROLL STAGE ── */
   #stage {
     position: fixed; inset: 0; z-index: 100;
-    display: flex; align-items: center; justify-content: center;
     overflow: hidden;
-    opacity: 0;
-    transition: opacity 1s ease;
+    opacity: 0; transition: opacity 1s ease;
   }
-
   #stage.visible { opacity: 1; }
 
-  /* The scroll track — scrolls upward */
+  /* The track — absolutely positioned, moved via JS translateY */
   #scroll-track {
     position: absolute;
-    width: 100%;
+    left: 0; right: 0; top: 0;
     text-align: center;
-    /* starts below screen */
-    transform: translateY(100vh);
-    /* animation added via JS */
+    will-change: transform;
   }
 
-  /* ─── CREDIT BLOCKS ─── */
+  /* ── CREDIT BLOCKS ── */
   .credit-block {
     padding: 70px 20px;
     max-width: 680px;
     margin: 0 auto;
   }
-
-  .credit-block.spacer {
-    padding: 120px 0;
-  }
+  .credit-block.spacer { padding: 100px 0; }
 
   .credit-label {
-    font-size: 11px;
-    letter-spacing: 0.35em;
-    color: var(--text-dim);
-    margin-bottom: 14px;
-    text-transform: uppercase;
+    font-size: 11px; letter-spacing: 0.35em;
+    color: var(--text-dim); margin-bottom: 14px; text-transform: uppercase;
   }
-
   .credit-name {
     font-family: 'VT323', monospace;
     font-size: clamp(30px, 5vw, 48px);
-    color: var(--white);
-    letter-spacing: 0.12em;
-    line-height: 1.2;
+    color: var(--white); letter-spacing: 0.12em; line-height: 1.2;
     text-shadow: 0 0 20px rgba(232,255,244,0.25);
   }
-
   .credit-name.green {
     color: var(--green);
     text-shadow: 0 0 24px var(--green-glow), 0 0 60px rgba(0,255,136,0.12);
   }
-
   .credit-name.dim {
-    color: var(--text-dim);
-    font-size: clamp(22px, 3.5vw, 34px);
-    text-shadow: none;
+    color: var(--text-dim); font-size: clamp(22px,3.5vw,34px); text-shadow: none;
   }
-
   .credit-note {
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-top: 10px;
-    letter-spacing: 0.1em;
-    line-height: 1.8;
+    font-size: 12px; color: var(--text-dim);
+    margin-top: 10px; letter-spacing: 0.1em; line-height: 1.8;
   }
-
-  /* dividers between sections */
   .credit-divider {
-    width: 80px;
-    height: 1px;
+    width: 80px; height: 1px;
     background: linear-gradient(90deg, transparent, var(--green-dim), transparent);
     margin: 0 auto;
   }
-
-  /* Lore quote blocks */
   .credit-quote {
     font-family: 'VT323', monospace;
     font-size: clamp(18px, 3vw, 24px);
-    color: var(--text-dim);
-    letter-spacing: 0.08em;
-    line-height: 1.7;
-    padding: 0 40px;
-    font-style: normal;
+    color: var(--text-dim); letter-spacing: 0.08em;
+    line-height: 1.7; padding: 0 40px;
   }
-
   .credit-quote .accent {
-    color: var(--green);
-    text-shadow: 0 0 12px var(--green-glow);
+    color: var(--green); text-shadow: 0 0 12px var(--green-glow);
   }
 
-  /* Final ARTICAL message */
+  /* ── TEAM GRID ── */
+  .team-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 28px 40px; max-width: 600px;
+    margin: 28px auto 0; text-align: left;
+  }
+  .team-role {
+    border-left: 1px solid rgba(0,170,85,0.3);
+    padding-left: 14px;
+  }
+  .team-role-label {
+    font-size: 10px; letter-spacing: 0.3em;
+    color: var(--text-dim); text-transform: uppercase; margin-bottom: 5px;
+  }
+  .team-role-name {
+    font-family: 'VT323', monospace;
+    font-size: clamp(18px, 2.5vw, 24px);
+    color: var(--white); letter-spacing: 0.08em;
+  }
+
+  /* ── ARTICAL FINAL MESSAGE ── */
   .artical-msg {
     font-family: 'VT323', monospace;
     font-size: clamp(22px, 4vw, 36px);
-    color: var(--green);
-    letter-spacing: 0.1em;
-    line-height: 1.9;
-    text-shadow: 0 0 20px var(--green-glow);
+    color: var(--green); letter-spacing: 0.1em;
+    line-height: 1.9; text-shadow: 0 0 20px var(--green-glow);
   }
-
   .artical-msg .dim { color: var(--text-dim); text-shadow: none; }
 
-  /* Final end title */
+  /* ── END TITLE ── */
   .end-title {
     font-family: 'VT323', monospace;
     font-size: clamp(60px, 10vw, 100px);
-    color: var(--green);
-    letter-spacing: 0.3em;
+    color: var(--green); letter-spacing: 0.3em;
     text-shadow: 0 0 40px var(--green-glow), 0 0 100px rgba(0,255,136,0.1);
   }
-
   .end-sub {
-    font-size: 11px;
-    letter-spacing: 0.4em;
-    color: var(--text-dim);
-    margin-top: 16px;
+    font-size: 11px; letter-spacing: 0.4em;
+    color: var(--text-dim); margin-top: 16px;
   }
 
-  /* Restart prompt at very bottom */
-  .restart-prompt {
-    padding: 60px 0 200px;
-    text-align: center;
-  }
-
+  /* ── RESTART ── */
+  .restart-prompt { padding: 60px 0 80px; text-align: center; }
   .restart-link {
-    font-family: 'VT323', monospace;
-    font-size: 20px;
-    color: var(--text-dim);
-    letter-spacing: 0.15em;
+    font-family: 'VT323', monospace; font-size: 20px;
+    color: var(--text-dim); letter-spacing: 0.15em;
     text-decoration: none;
-    border: 1px solid rgba(0,170,85,0.4);
-    padding: 8px 24px;
-    transition: color 0.2s, border-color 0.2s, text-shadow 0.2s;
-    cursor: pointer;
+    border: 1px solid rgba(0,170,85,0.4); padding: 8px 24px;
+    transition: color .2s, border-color .2s, text-shadow .2s; cursor: pointer;
   }
-
   .restart-link:hover {
-    color: var(--green);
-    border-color: var(--green-dim);
+    color: var(--green); border-color: var(--green-dim);
     text-shadow: 0 0 12px var(--green-glow);
   }
 
-  /* Cursor blink in final line */
+  /* blinking cursor */
   .blink-cursor {
-    display: inline-block;
-    width: 10px; height: 1em;
-    background: var(--green);
-    vertical-align: text-bottom;
-    margin-left: 4px;
+    display: inline-block; width: 10px; height: 1em;
+    background: var(--green); vertical-align: text-bottom; margin-left: 4px;
     box-shadow: 0 0 8px var(--green-glow);
     animation: blink 1s step-end infinite;
   }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-  }
+  #controls { display: none; }
 
-  /* Speed controls */
-  #controls {
-    position: fixed;
-    bottom: 24px; right: 28px;
-    z-index: 800;
-    display: flex; gap: 10px;
-    opacity: 0;
-    transition: opacity 0.5s;
+  #pause-msg {
+    position: fixed; bottom: 24px; left: 28px; z-index: 800;
+    font-family: 'VT323', monospace; font-size: 14px;
+    color: var(--text-dim); letter-spacing: 0.2em;
+    opacity: 0; transition: opacity .4s;
   }
-
-  #controls.visible { opacity: 1; }
-
-  .ctrl-btn {
-    font-family: 'VT323', monospace;
-    font-size: 16px;
-    color: var(--text-dim);
-    letter-spacing: 0.1em;
-    background: transparent;
-    border: 1px solid rgba(0,170,85,0.3);
-    padding: 4px 12px;
-    cursor: pointer;
-    transition: color 0.2s, border-color 0.2s;
-  }
-  .ctrl-btn:hover, .ctrl-btn.active {
-    color: var(--green);
-    border-color: var(--green-dim);
-  }
+  #pause-msg.visible { opacity: 1; }
 </style>
 </head>
 <body>
@@ -329,11 +247,37 @@
 
     <div class="credit-block spacer"></div>
 
-    <!-- Production -->
+    <!-- PRODUCTION -->
     <div class="credit-block">
-      <div class="credit-label">a project by</div>
-      <div class="credit-name green">[ YOUR NAME / TEAM ]</div>
-      <div class="credit-note">operator &nbsp;·&nbsp; architect &nbsp;·&nbsp; keeper of fragments</div>
+      <div class="credit-label">developed by</div>
+      <div class="credit-name green">DPSN TECH TEAM</div>
+      <div class="credit-note">YUVAKARSHAN 2K26 &nbsp;·&nbsp; cryptography challenge</div>
+      <div class="team-grid">
+        <div class="team-role">
+          <div class="team-role-label">Lead Developer</div>
+          <div class="team-role-name">[ NAME ]</div>
+        </div>
+        <div class="team-role">
+          <div class="team-role-label">Puzzle Designer</div>
+          <div class="team-role-name">[ NAME ]</div>
+        </div>
+        <div class="team-role">
+          <div class="team-role-label">Lore &amp; Narrative</div>
+          <div class="team-role-name">[ NAME ]</div>
+        </div>
+        <div class="team-role">
+          <div class="team-role-label">UI / Frontend</div>
+          <div class="team-role-name">[ NAME ]</div>
+        </div>
+        <div class="team-role">
+          <div class="team-role-label">Systems &amp; Backend</div>
+          <div class="team-role-name">[ NAME ]</div>
+        </div>
+        <div class="team-role">
+          <div class="team-role-label">Testing &amp; QA</div>
+          <div class="team-role-name">[ NAME ]</div>
+        </div>
+      </div>
     </div>
 
     <div class="credit-block"><div class="credit-divider"></div></div>
@@ -351,18 +295,16 @@
 
     <div class="credit-block"><div class="credit-divider"></div></div>
 
-    <!-- Characters -->
+    <!-- Entities -->
     <div class="credit-block">
       <div class="credit-label">entities</div>
       <div class="credit-name">NULL</div>
       <div class="credit-note">the shelter &nbsp;·&nbsp; the disguise &nbsp;·&nbsp; the silence</div>
     </div>
-
     <div class="credit-block" style="padding-top:0">
       <div class="credit-name">ARTICAL</div>
       <div class="credit-note">the signal &nbsp;·&nbsp; the question &nbsp;·&nbsp; the returning</div>
     </div>
-
     <div class="credit-block" style="padding-top:0">
       <div class="credit-name dim">THE OPERATOR</div>
       <div class="credit-note">you &nbsp;·&nbsp; the one with hands</div>
@@ -380,22 +322,12 @@
 
     <div class="credit-block"><div class="credit-divider"></div></div>
 
-    <!-- Tools / tech / world — edit freely -->
+    <!-- Built with -->
     <div class="credit-block">
       <div class="credit-label">built with</div>
-      <div class="credit-name dim">[ TOOLS / ENGINE / PLATFORM ]</div>
+      <div class="credit-name dim">[VS CODE / GITHUB / VERCEL / MINECRAFT]</div>
     </div>
 
-    <div class="credit-block"><div class="credit-divider"></div></div>
-
-    <!-- Special thanks -->
-    <div class="credit-block">
-      <div class="credit-label">carried the fragments</div>
-      <div class="credit-name dim">[ PLAYER / TESTER / COLLABORATOR ]</div>
-      <div class="credit-note">without hands, the signal cannot return</div>
-    </div>
-
-    <div class="credit-block"><div class="credit-divider"></div></div>
 
     <!-- ARTICAL final message -->
     <div class="credit-block">
@@ -405,15 +337,15 @@
         reconstruction complete.<br>
         the question now begins.<br>
         <br>
-        <span class="dim">what do you want to know?</span>
+        <span class="dim">will the signal return?</span>
         <span class="blink-cursor"></span>
       </div>
     </div>
 
     <div class="credit-block spacer"></div>
 
-    <!-- End title -->
-    <div class="credit-block" style="text-align:center; padding: 80px 20px;">
+    <!-- END TITLE — scroll stops here -->
+    <div id="end-anchor" class="credit-block" style="text-align:center; padding:80px 20px 60px;">
       <div class="end-title">NULL</div>
       <div class="end-sub">YUVAKARSHAN 2K26 &nbsp;·&nbsp; CRYPTOGRAPHY CHALLENGE</div>
     </div>
@@ -423,8 +355,8 @@
       <a class="restart-link" href="message.html">&lt; return to transmission</a>
     </div>
 
-  </div>
-</div>
+  </div><!-- /scroll-track -->
+</div><!-- /stage -->
 
 <!-- Speed controls -->
 <div id="controls">
@@ -433,91 +365,102 @@
   <button class="ctrl-btn" id="btn-fast">▸▸▸ fast</button>
 </div>
 
+<div id="pause-msg">[ paused · click to resume ]</div>
+
 <script>
-  const entryScreen = document.getElementById('entry-screen');
-  const stage       = document.getElementById('stage');
-  const track       = document.getElementById('scroll-track');
-  const controls    = document.getElementById('controls');
+  var entryScreen = document.getElementById('entry-screen');
+  var stage       = document.getElementById('stage');
+  var track       = document.getElementById('scroll-track');
+  var controls    = document.getElementById('controls');
+  var pauseMsg    = document.getElementById('pause-msg');
+  var endAnchor   = document.getElementById('end-anchor');
 
-  // Speed settings: total scroll duration in ms
-  const SPEEDS = { slow: 90000, normal: 55000, fast: 28000 };
-  let currentSpeed = 'normal';
-  let animStartTime = null;
-  let animDuration  = SPEEDS.normal;
-  let trackHeight   = 0;
-  let rafId         = null;
-  let started       = false;
-  let paused        = false;
-  let progress      = 0; // 0 → 1
+  // ── SPEED: pixels per second upward ──
+  var SPEEDS = { slow: 50, normal: 110, fast: 260 };
+  var pxPerSec = SPEEDS.slow;
 
-  function getTrackHeight() {
-    return track.scrollHeight + window.innerHeight;
+  var currentY = 0;   // current translateY in px
+  var stopY    = 0;   // translateY value when NULL is perfectly centred
+  var paused   = false;
+  var stopped  = false;
+  var lastTs   = null;
+
+  function move(y) {
+    currentY = y;
+    track.style.transform = 'translateY(' + y + 'px)';
   }
 
-  function setProgress(p) {
-    progress = Math.min(p, 1);
-    const travel = getTrackHeight();
-    const y = window.innerHeight - progress * travel;
-    track.style.transform = `translateY(${y}px)`;
+  function computeStopY() {
+    // track starts at top:0, so endAnchor.offsetTop is its real distance
+    // from the top of the track.
+    // We want: currentY + endAnchor.offsetTop + endAnchor.offsetHeight/2 = vh/2
+    var anchorMid = endAnchor.offsetTop + endAnchor.offsetHeight / 2;
+    return Math.round(window.innerHeight / 2 - anchorMid);
+  }
+
+  function tick(ts) {
+    if (lastTs === null) lastTs = ts;
+    var dt = (ts - lastTs) / 1000;
+    lastTs = ts;
+
+    if (!paused && !stopped) {
+      var next = currentY - pxPerSec * dt; // move upward = decreasing Y
+      if (next <= stopY) {
+        move(stopY);
+        stopped = true;
+        // glow burst on NULL
+        var t = endAnchor.querySelector('.end-title');
+        t.style.transition = 'text-shadow 1.2s ease';
+        t.style.textShadow = '0 0 60px rgba(0,255,136,0.9), 0 0 140px rgba(0,255,136,0.4)';
+        return; // don't schedule next frame
+      }
+      move(next);
+    }
+
+    requestAnimationFrame(tick);
   }
 
   function startScroll() {
-    if (started) return;
-    started = true;
-    trackHeight = getTrackHeight();
     stage.classList.add('visible');
     controls.classList.add('visible');
 
-    // Start from bottom of viewport
-    setProgress(0);
+    // Place track so its top edge is exactly at the bottom of the viewport
+    // (first content will scroll in from the bottom)
+    move(window.innerHeight);
 
-    let lastTime = null;
-
-    function tick(now) {
-      if (paused) { rafId = requestAnimationFrame(tick); return; }
-      if (!lastTime) lastTime = now;
-      const delta = now - lastTime;
-      lastTime = now;
-
-      progress += delta / animDuration;
-      setProgress(progress);
-
-      if (progress < 1) {
-        rafId = requestAnimationFrame(tick);
-      }
-      // Done — just stops at end naturally
-    }
-
-    rafId = requestAnimationFrame(tick);
+    stopY    = computeStopY();
+    lastTs   = null;
+    requestAnimationFrame(tick);
   }
 
-  // Speed controls
+  // Speed buttons
   function setSpeed(s) {
-    // Adjust duration so current progress position is preserved
-    currentSpeed = s;
-    animDuration = SPEEDS[s];
-    document.querySelectorAll('.ctrl-btn').forEach(b => b.classList.remove('active'));
+    pxPerSec = SPEEDS[s];
+    document.querySelectorAll('.ctrl-btn').forEach(function(b){ b.classList.remove('active'); });
     document.getElementById('btn-' + s).classList.add('active');
   }
+  document.getElementById('btn-slow').addEventListener('click',   function(){ setSpeed('slow');   });
+  document.getElementById('btn-normal').addEventListener('click', function(){ setSpeed('normal'); });
+  document.getElementById('btn-fast').addEventListener('click',   function(){ setSpeed('fast');   });
 
-  document.getElementById('btn-slow').addEventListener('click', () => setSpeed('slow'));
-  document.getElementById('btn-normal').addEventListener('click', () => setSpeed('normal'));
-  document.getElementById('btn-fast').addEventListener('click', () => setSpeed('fast'));
-
-  // Click to pause / resume
-  stage.addEventListener('click', () => {
+  // Click stage = pause/resume
+  stage.addEventListener('click', function() {
+    if (stopped) return;
     paused = !paused;
+    if (paused) { lastTs = null; } // reset so no time-jump on resume
+    pauseMsg.classList.toggle('visible', paused);
   });
 
-  // ── Boot sequence ──
-  // After entry anim, fade out entry and begin scroll
-  setTimeout(() => {
+  // ── BOOT ──
+  // Last entry animation ends at ~3s (item at 2.4s + 0.6s duration)
+  // Add 2s for reading the prompt, then fade out (1.5s), then scroll.
+  setTimeout(function() {
     entryScreen.classList.add('fade-out');
-    setTimeout(() => {
+    setTimeout(function() {
       entryScreen.style.display = 'none';
       startScroll();
-    }, 1600);
-  }, 3400);
+    }, 1500);
+  }, 5000);
 </script>
 </body>
 </html>
